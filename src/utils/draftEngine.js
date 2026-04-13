@@ -1,31 +1,63 @@
 export const getCpuPick = (availableProspects, currentTeam) => {
   if (!availableProspects || availableProspects.length === 0) return null;
 
-  // Best Player Available overall
-  const bestAvailable = availableProspects[0];
-
+  // Se o time não tem needs cadastradas, vai direto de BPA
   if (!currentTeam || !currentTeam.needs || currentTeam.needs.length === 0) {
-    return bestAvailable;
+    return availableProspects[0];
   }
 
   const teamNeeds = currentTeam.needs;
+  const needBonuses = {};
 
-  // Find the highest ranked player that matches a team need
-  const bestNeedPlayer = availableProspects.find(p => teamNeeds.includes(p.position));
+  // Calcula o bônus base para cada posição de need listada pelo time.
+  // Equipes podem ter 2, 3, 5 needs. A fórmula se adapta ao tamanho do array.
+  teamNeeds.forEach((position, index) => {
+    // A primeira need (index 0) tem o maior bônus base (ex: 14)
+    // A cada índice subsequente, o bônus cai 3 pontos.
+    let baseBonus = 14 - (index * 3);
+    
+    // Garante um pequeno bônus mínimo (2) para quem estiver na lista, não importa o tamanho dela
+    if (baseBonus < 2) baseBonus = 2;
 
-  if (!bestNeedPlayer) {
-    return bestAvailable;
+    // Aleatoriedade: Adiciona uma flutuação aleatória entre -2 e +2 ao peso da need.
+    // Isso faz com que a prioridade possa mudar levemente em diferentes simulações.
+    const randomFactor = Math.floor(Math.random() * 5) - 2; 
+
+    needBonuses[position] = Math.max(0, baseBonus + randomFactor);
+  });
+
+  let bestPick = null;
+  let bestValueScore = Infinity;
+
+  // Analisa os top 30 jogadores disponíveis no board. 
+  // Limitar as opções avaliadas previne que um jogador esquecido (rank 200) ganhe de um BPA de topo.
+  const maxScanDepth = Math.min(30, availableProspects.length);
+
+  for (let i = 0; i < maxScanDepth; i++) {
+    const prospect = availableProspects[i];
+    
+    // O score base é o rank original do jogador (quanto menor, melhor)
+    let valueScore = prospect.rank;
+
+    // Aplica o desconto se for uma need
+    if (needBonuses[prospect.position]) {
+      valueScore -= needBonuses[prospect.position];
+    }
+
+    // Leve aleatoriedade no julgamento individual do jogador (surpresas no draft)
+    valueScore += Math.floor(Math.random() * 3);
+
+    // Salva o jogador com o MENOR Value Score (ou seja, custo-benefício mais vantajoso)
+    if (valueScore < bestValueScore) {
+      bestValueScore = valueScore;
+      bestPick = prospect;
+    }
   }
 
-  // CPU Logic: If the best player that fills a need is within 10 spots of the absolute best player, take the need.
-  // Otherwise, the value is too good to pass up (BPA).
-  // E.g., if Best Available is Rank #5, and Best Need is Rank #12 (diff=7), we take the Need.
-  // If Best Available is Rank #5, and Best Need is Rank #20 (diff=15), we take the BPA.
-  const rankDiff = bestNeedPlayer.rank - bestAvailable.rank;
-
-  if (rankDiff <= 10) {
-    return bestNeedPlayer;
+  // Fallback de segurança: Pega o BPA se ocorrer algum erro numérico
+  if (!bestPick) {
+    return availableProspects[0];
   }
 
-  return bestAvailable;
+  return bestPick;
 };

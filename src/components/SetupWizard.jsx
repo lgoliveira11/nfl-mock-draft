@@ -5,7 +5,8 @@ export default function SetupWizard({ onComplete }) {
   const [step, setStep] = useState(1);
   const [prospects, setProspects] = useState(defaultProspects);
   const [draftOrder, setDraftOrder] = useState(defaultDraftOrder);
-  const [userTeam, setUserTeam] = useState(null);
+  const [userTeams, setUserTeams] = useState([]);
+  const [numRounds, setNumRounds] = useState(3);
 
   const handleFileUpload = (event, type) => {
     const file = event.target.files[0];
@@ -38,15 +39,19 @@ export default function SetupWizard({ onComplete }) {
   };
 
   const finishSetup = () => {
-    if (!userTeam) {
-      alert("Please select a team to control!");
+    if (userTeams.length === 0) {
+      alert("Please select at least one team to control!");
       return;
     }
-    // Pass the finalized configuration up to App
+    
+    // Filter the authentic draft order by the selected number of rounds
+    const multiRoundOrder = draftOrder.filter(pick => pick.round <= numRounds);
+
     onComplete({
-      userTeam,
+      userTeams,
       prospects,
-      draftOrder
+      draftOrder: multiRoundOrder,
+      numRounds
     });
   };
 
@@ -84,7 +89,7 @@ export default function SetupWizard({ onComplete }) {
           <div className="step-content">
             <h2 style={{ marginBottom: '1rem' }}>Player Big Board Data</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              By default, we load the consensus Top 40 prospects for the 2024 class. You can override this by uploading a JSON file containing an array of player objects (id, name, rank, position, school, grade).
+              By default, we load the consensus Top 200 prospects. You can override this by uploading a JSON file containing an array of player objects (id, name, rank, position, school, grade).
             </p>
             <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
               <strong>Current Loaded Prospects: </strong> {prospects.length} players
@@ -128,12 +133,15 @@ export default function SetupWizard({ onComplete }) {
             </div>
 
             <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {draftOrder.map((team) => (
-                <div key={team.pick} className="log-item" style={{ display: 'grid', gridTemplateColumns: '50px 150px 1fr', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: '8px' }}>
-                  <div style={{ fontWeight: 'bold' }}>#{team.pick}</div>
+              {Array.from(new Set(draftOrder.map(t => t.abbr)))
+                .map(abbr => draftOrder.find(t => t.abbr === abbr))
+                .sort((a, b) => a.team.localeCompare(b.team))
+                .map((team) => (
+                <div key={team.abbr} className="log-item" style={{ display: 'grid', gridTemplateColumns: '50px 150px 1fr', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: '8px' }}>
+                  <div style={{ fontWeight: 'bold' }}>{team.abbr}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span>{team.logo}</span>
-                    <span>{team.abbr}</span>
+                    <img src={team.logo} alt={team.abbr} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                    <span>{team.team}</span>
                   </div>
                   <input 
                     type="text" 
@@ -161,6 +169,33 @@ export default function SetupWizard({ onComplete }) {
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Who will you draft for? The CPU will automate the picks for all other franchises based on their Team Needs and the BPA algorithm.
             </p>
+            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px' }}>
+              <strong style={{ fontSize: '1.2rem' }}>Duração do Draft:</strong>
+              <select 
+                value={numRounds}
+                onChange={(e) => setNumRounds(Number(e.target.value))}
+                style={{ background: 'var(--bg-tertiary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '4px', fontSize: '1.1rem' }}
+              >
+                {[1, 2, 3, 4, 5, 6, 7].map(r => (
+                  <option key={r} value={r}>{r} Rodada{r > 1 ? 's' : ''}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>
+              <button 
+                className="btn btn-outline btn-sm" 
+                onClick={() => setUserTeams(Array.from(new Set(draftOrder.map(t => t.abbr))))}
+              >
+                Selecionar Todos
+              </button>
+              <button 
+                className="btn btn-outline btn-sm" 
+                onClick={() => setUserTeams([])}
+              >
+                Limpar Seleção
+              </button>
+            </div>
             
             <div className="team-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
               {Array.from(new Set(draftOrder.map(t => t.abbr)))
@@ -168,11 +203,11 @@ export default function SetupWizard({ onComplete }) {
                 .map(team => (
                 <div 
                   key={team.abbr} 
-                  className={`glass-panel team-card ${userTeam === team.abbr ? 'selected' : ''}`}
-                  onClick={() => setUserTeam(team.abbr)}
+                  className={`glass-panel team-card ${userTeams.includes(team.abbr) ? 'selected' : ''}`}
+                  onClick={() => setUserTeams(prev => prev.includes(team.abbr) ? prev.filter(t => t !== team.abbr) : [...prev, team.abbr])}
                   style={{ padding: '1rem' }}
                 >
-                  <span className="team-logo-large" style={{ fontSize: '2rem' }}>{team.logo}</span>
+                  <img src={team.logo} alt={team.abbr} className="team-logo-large" style={{ width: '48px', height: '48px', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
                   <strong style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>{team.abbr}</strong>
                 </div>
               ))}
@@ -182,8 +217,8 @@ export default function SetupWizard({ onComplete }) {
                <button className="btn btn-outline" onClick={() => setStep(2)}>&larr; Back</button>
                <button 
                   className="btn btn-primary" 
-                  disabled={!userTeam}
-                  style={{ opacity: userTeam ? 1 : 0.5 }}
+                  disabled={userTeams.length === 0}
+                  style={{ opacity: userTeams.length > 0 ? 1 : 0.5 }}
                   onClick={finishSetup}
                >
                  Start Mock Draft! &rarr;
