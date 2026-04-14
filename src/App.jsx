@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import SetupWizard from './components/SetupWizard';
+import SetupPage from './components/SetupPage';
 import PlayerProfileModal from './components/PlayerProfileModal';
 import { getCpuPick } from './utils/draftEngine';
 import { playerDatabase } from './data/mockData';
@@ -11,6 +11,7 @@ function App() {
   // App State once configured
   const [currentPickIndex, setCurrentPickIndex] = useState(0);
   const [availableProspects, setAvailableProspects] = useState([]);
+  const [cpuProspects, setCpuProspects] = useState([]); // Board for CPU logic
   const [draftHistory, setDraftHistory] = useState([]);
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftSpeed, setDraftSpeed] = useState('normal');
@@ -19,11 +20,16 @@ function App() {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [postDraftTeamFilter, setPostDraftTeamFilter] = useState("ALL");
   const [logTeamFilter, setLogTeamFilter] = useState("ALL");
+  const [logSearchQuery, setLogSearchQuery] = useState("");
+  const [logSelectedPositions, setLogSelectedPositions] = useState([]);
+  const [activeTab, setActiveTab] = useState('prospects');
 
   // Initialize draft based on configuration
   useEffect(() => {
     if (setupConfig) {
       setAvailableProspects(setupConfig.prospects);
+      setCpuProspects(setupConfig.cpuProspects || setupConfig.prospects);
+      setDraftSpeed(setupConfig.draftSpeed || 'normal');
       setCurrentPickIndex(0);
       setDraftHistory([]);
     }
@@ -39,27 +45,30 @@ function App() {
       if (draftSpeed === 'instant') {
         let simPickIndex = currentPickIndex;
         let simAvailableProps = [...availableProspects];
+        let simCpuProps = [...cpuProspects];
         const newHistoryPicks = [];
 
         while (simPickIndex < setupConfig.draftOrder.length) {
           const simTeam = setupConfig.draftOrder[simPickIndex];
           if (setupConfig.userTeams.includes(simTeam.abbr)) break;
           
-          const selectedProspect = getCpuPick(simAvailableProps, simTeam);
+          const selectedProspect = getCpuPick(simCpuProps, simTeam);
           if (!selectedProspect) break;
           
           newHistoryPicks.push({ pick: simPickIndex + 1, team: simTeam, player: selectedProspect });
           simAvailableProps = simAvailableProps.filter(p => p.id !== selectedProspect.id);
+          simCpuProps = simCpuProps.filter(p => p.id !== selectedProspect.id);
           simPickIndex++;
         }
 
         setDraftHistory(prev => [...prev, ...newHistoryPicks]);
         setAvailableProspects(simAvailableProps);
+        setCpuProspects(simCpuProps);
         setCurrentPickIndex(simPickIndex);
       } else {
         const speedMap = { slow: 3000, normal: 1500, fast: 500 };
         const timer = setTimeout(() => {
-          const selectedProspect = getCpuPick(availableProspects, currentTeam);
+          const selectedProspect = getCpuPick(cpuProspects, currentTeam);
           if (selectedProspect) {
             handleMakePick(selectedProspect.id);
           }
@@ -76,6 +85,7 @@ function App() {
 
     setDraftHistory(prev => [...prev, { pick: currentPickIndex + 1, team, player }]);
     setAvailableProspects(prev => prev.filter(p => p.id !== playerId));
+    setCpuProspects(prev => prev.filter(p => p.id !== playerId));
     setCurrentPickIndex(prev => prev + 1);
   };
 
@@ -93,18 +103,30 @@ function App() {
     return "";
   };
 
+  const isDraftComplete = setupConfig ? (currentPickIndex >= setupConfig.draftOrder.length || availableProspects.length === 0) : false;
+  const currentTeamOnClock = (setupConfig && !isDraftComplete) ? setupConfig.draftOrder[currentPickIndex] : null;
+  const isUserTurn = (setupConfig && currentTeamOnClock) ? setupConfig.userTeams.includes(currentTeamOnClock.abbr) : false;
+
+  // Auto-switch tabs based on turn (Mobile only)
+  useEffect(() => {
+    if (!isDraftComplete && setupConfig) {
+      if (isUserTurn) {
+        setActiveTab('prospects');
+      } else {
+        setActiveTab('history');
+      }
+    }
+  }, [isUserTurn, isDraftComplete, setupConfig]);
+
   if (!setupConfig) {
     return (
       <div className="app-container">
-        <SetupWizard onComplete={(config) => setSetupConfig(config)} />
+        <SetupPage onComplete={(config) => setSetupConfig(config)} />
       </div>
     );
   }
 
   const { draftOrder, userTeams } = setupConfig;
-  const isDraftComplete = currentPickIndex >= draftOrder.length || availableProspects.length === 0;
-  const currentTeamOnClock = isDraftComplete ? null : draftOrder[currentPickIndex];
-  const isUserTurn = currentTeamOnClock ? userTeams.includes(currentTeamOnClock.abbr) : false;
 
   const availablePositions = Array.from(new Set(availableProspects.map(p => p.position))).sort();
   
@@ -126,13 +148,44 @@ function App() {
     return matchesPos && matchesSearch;
   });
 
+  const handleLogPositionToggle = (pos) => {
+    setLogSelectedPositions(prev => 
+      prev.includes(pos) ? prev.filter(p => p !== pos) : [...prev, pos]
+    );
+  };
+
+  const displayedLog = (draftOrder || []).filter(pick => {
+    const isPast = (pick.pick - 1) < currentPickIndex;
+    const pastPick = isPast ? draftHistory.find(h => h.pick === pick.pick) : null;
+    
+    // Team Filter: ALL or Current Team on Clock
+    const currentTeamAbbr = currentTeamOnClock?.abbr || "";
+    const matchesTeam = logTeamFilter === 'ALL' || pick.abbr === logTeamFilter;
+    
+    // Name Search (Only applies if player is picked)
+    const matchesSearch = !logSearchQuery || (pastPick && pastPick.player.name.toLowerCase().includes(logSearchQuery.toLowerCase()));
+    
+    // Position Filter
+    let matchesPos = logSelectedPositions.length === 0;
+    if (!matchesPos) {
+      if (isPast && pastPick) {
+        matchesPos = logSelectedPositions.includes(pastPick.player.position);
+      } else {
+        // If not picked yet, check against team needs
+        matchesPos = pick.needs && pick.needs.some(n => logSelectedPositions.includes(n));
+      }
+    }
+
+    return matchesTeam && matchesSearch && matchesPos;
+  });
+
   return (
     <div className="app-container">
       <header className="app-header">
         <div className="app-brand">
           <h1>NFL Mock Draft</h1>
         </div>
-        <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="user-info">
           <span style={{ color: 'var(--text-secondary)' }}>Você controla: </span>
           <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {userTeams.length > 5 ? (
@@ -234,41 +287,78 @@ function App() {
         )}
 
         {!isDraftComplete && (
+          <div className="mobile-tabs">
+            <button 
+              className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              Histórico
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'prospects' ? 'active' : ''}`}
+              onClick={() => setActiveTab('prospects')}
+            >
+              Prospectos
+            </button>
+          </div>
+        )}
+
+        {!isDraftComplete && (
           <div className="layout-grid">
             {/* LEFT COLUMN: DRAFT LOG */}
-            <div className="sidebar left-log">
+            <div className={`sidebar left-log tab-content ${activeTab === 'history' ? 'active' : 'hidden'}`}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <h3 className="section-title" style={{ margin: 0 }}>Histórico de Escolhas</h3>
               </div>
               
-              <div className="pd-filter-row" style={{ flexWrap: 'wrap', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                <button 
-                  className={`pd-filter-pill ${logTeamFilter === 'ALL' ? 'active' : ''}`}
-                  onClick={() => setLogTeamFilter('ALL')}
-                >
-                  TODOS
-                </button>
-                {Array.from(new Set(draftOrder.map(t => t.abbr)))
-                  .sort()
-                  .map(abbr => {
-                    const team = draftOrder.find(t => t.abbr === abbr);
-                    return (
-                      <button
-                        key={abbr}
-                        className={`pd-filter-pill ${logTeamFilter === abbr ? 'active' : ''}`}
-                        onClick={() => setLogTeamFilter(abbr)}
-                        style={{ padding: '0.4rem', minWidth: 'auto' }}
-                      >
-                        <img src={team.logo} alt={abbr} style={{ margin: 0 }} />
-                      </button>
-                    );
-                })}
+              <div className="filters-container">
+                <div className="search-bar">
+                  <input 
+                    type="text" 
+                    placeholder="Procurar jogador..."
+                    value={logSearchQuery}
+                    onChange={(e) => setLogSearchQuery(e.target.value)}
+                  />
+                  <span className="search-icon">🔍</span>
+                </div>
+                
+                <div className="pill-filters">
+                  <button 
+                    className={`pill-btn ${logTeamFilter === 'ALL' ? 'active' : ''}`}
+                    onClick={() => { setLogTeamFilter('ALL'); setLogSelectedPositions([]); }}
+                  >
+                    TODOS
+                  </button>
+                  
+                  {currentTeamOnClock && (
+                    <button 
+                      className={`pill-btn ${logTeamFilter === currentTeamOnClock.abbr ? 'active-need' : ''}`}
+                      onClick={() => {
+                        setLogTeamFilter(currentTeamOnClock.abbr);
+                        if (currentTeamOnClock.needs) setLogSelectedPositions(currentTeamOnClock.needs);
+                      }}
+                    >
+                      <img src={currentTeamOnClock.logo} alt={currentTeamOnClock.abbr} style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+                      {currentTeamOnClock.abbr}
+                    </button>
+                  )}
+                  
+                  <div className="pill-separator"></div>
+
+                  {['QB', 'RB', 'WR', 'TE', 'OT', 'IOL', 'EDGE', 'DL', 'IDL', 'LB', 'CB', 'S'].map(pos => (
+                    <button 
+                      key={pos}
+                      className={`pill-btn ${logSelectedPositions.includes(pos) ? 'active-pos' : ''}`}
+                      onClick={() => handleLogPositionToggle(pos)}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="draft-log" style={{ maxHeight: '75vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                {draftOrder
-                  .filter(t => logTeamFilter === 'ALL' || t.abbr === logTeamFilter)
-                  .map((t, idx) => {
+                {displayedLog.map((t) => {
                      const isPast = (t.pick - 1) < currentPickIndex;
                      const isCurrent = (t.pick - 1) === currentPickIndex;
                      
@@ -286,22 +376,34 @@ function App() {
                          className={`log-item log-item-horizontal ${highlightClass}`}
                          style={{ opacity }}
                        >
-                         <div className="log-left">
+                         <div className="log-left" style={{ flex: 1 }}>
                            <div className="log-pick-num">{String(t.pick).padStart(2, '0')}</div>
                            <div className="log-team"><img src={t.logo} alt="logo" /></div>
                            <div className="log-player-name">
                              {isPast && pastPick ? pastPick.player.name : ""}
                            </div>
                          </div>
-                         <div className="log-right log-needs-badges">
-                           {isPast && pastPick ? (
-                             <span className={`pos-badge custom-badge tiny-badge ${getPositionClass(pastPick.player.position)}`}>
-                               {pastPick.player.position}
-                             </span>
-                           ) : (
-                             t.needs && t.needs.map(n => (
-                               <span key={n} className={`pos-badge custom-badge tiny-badge ${getPositionClass(n)}`}>{n}</span>
-                             ))
+                         <div className="log-right" style={{ gap: '1rem' }}>
+                           <div className="log-needs-badges" style={{ flexWrap: 'nowrap' }}>
+                             {isPast && pastPick ? (
+                               <span className={`pos-badge custom-badge tiny-badge ${getPositionClass(pastPick.player.position)}`}>
+                                 {pastPick.player.position}
+                               </span>
+                             ) : (
+                               t.needs && t.needs.slice(0, 4).map(n => (
+                                 <span key={n} className={`pos-badge custom-badge tiny-badge ${getPositionClass(n)}`}>{n}</span>
+                               ))
+                             )}
+                           </div>
+                           
+                           {isPast && pastPick && (
+                             <button 
+                               className="btn-outline-pill mini"
+                               style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
+                               onClick={() => setSelectedProfileId(pastPick.player.id)}
+                             >
+                               Ver Perfil
+                             </button>
                            )}
                          </div>
                        </div>
@@ -312,7 +414,7 @@ function App() {
             </div>
 
             {/* RIGHT COLUMN: PROSPECT BOARD */}
-            <div className="draft-board right-board">
+            <div className={`draft-board right-board tab-content ${activeTab === 'prospects' ? 'active' : 'hidden'}`}>
               <div className="board-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <h3 className="section-title" style={{ margin: 0 }}>Prospectos</h3>
