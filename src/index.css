@@ -1441,16 +1441,13 @@ h1, h2, h3, h4, h5, h6 {
 .team-selection-header {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
 }
 
 .teams-selection-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 0.8rem;
-  padding: 1.5rem; /* Margins */
 }
 
 .team-selection-card {

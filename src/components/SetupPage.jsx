@@ -165,8 +165,9 @@ export default function SetupPage({ onComplete }) {
         </div>
 
         {/* RIGHT COLUMN: TEAM SELECTION */}
-        <div className="setup-col teams-column glass-panel">
+        <section className="setup-section glass-panel teams-column">
           <h3 className="section-title">SELECIONE OS TIMES</h3>
+          
           <div className="team-selection-header">
             <button className="btn btn-outline btn-sm" onClick={() => setUserTeams(uniqueTeams.map(t => t.abbr))}>
               Selecionar Todos
@@ -188,7 +189,7 @@ export default function SetupPage({ onComplete }) {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       </div>
 
       {editingTeam && (

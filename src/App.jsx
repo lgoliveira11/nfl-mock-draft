@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SetupPage from './components/SetupPage';
 import PlayerProfileModal from './components/PlayerProfileModal';
 import { getCpuPick } from './utils/draftEngine';
@@ -23,6 +23,7 @@ function App() {
   const [logSearchQuery, setLogSearchQuery] = useState("");
   const [logSelectedPositions, setLogSelectedPositions] = useState([]);
   const [activeTab, setActiveTab] = useState('prospects');
+  const currentPickRef = useRef(null);
 
   // Initialize draft based on configuration
   useEffect(() => {
@@ -107,7 +108,6 @@ function App() {
   const currentTeamOnClock = (setupConfig && !isDraftComplete) ? setupConfig.draftOrder[currentPickIndex] : null;
   const isUserTurn = (setupConfig && currentTeamOnClock) ? setupConfig.userTeams.includes(currentTeamOnClock.abbr) : false;
 
-  // Auto-switch tabs based on turn (Mobile only)
   useEffect(() => {
     if (!isDraftComplete && setupConfig) {
       if (isUserTurn) {
@@ -117,6 +117,16 @@ function App() {
       }
     }
   }, [isUserTurn, isDraftComplete, setupConfig]);
+  
+  // Auto-scroll to current pick in log
+  useEffect(() => {
+    if (currentPickRef.current) {
+      currentPickRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, [currentPickIndex, activeTab]);
 
   if (!setupConfig) {
     return (
@@ -357,7 +367,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="draft-log" style={{ maxHeight: '75vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+              <div className="draft-log">
                 {displayedLog.map((t) => {
                      const isPast = (t.pick - 1) < currentPickIndex;
                      const isCurrent = (t.pick - 1) === currentPickIndex;
@@ -373,6 +383,7 @@ function App() {
                      return (
                        <div 
                          key={t.pick} 
+                         ref={isCurrent ? currentPickRef : null}
                          className={`log-item log-item-horizontal ${highlightClass}`}
                          style={{ opacity }}
                        >
@@ -497,12 +508,12 @@ function App() {
                 {displayedProspects.slice(0, 50).map((prospect) => (
                   <div key={prospect.id} className="prospect-card-horizontal">
                     <div className="card-left">
-                      <div className="prospect-rank">#{prospect.rank}</div>
+                      <div className="prospect-rank">{String(prospect.rank).padStart(2, '0')}</div>
                       <div className="prospect-details-v">
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {prospect.name}
+                        <h3 className="prospect-name-row">
+                          <span className="player-name">{prospect.name}</span>
                           {currentTeamOnClock?.needs?.includes(prospect.position) && (
-                            <span className="team-need-badge">TEAM NEED</span>
+                            <span className="team-need-badge">NEED</span>
                           )}
                         </h3>
                         <div className="prospect-meta">
@@ -510,20 +521,24 @@ function App() {
                             {prospect.position}
                           </span>
                           <span className="meta-sep">|</span>
-                          <span className="meta-grade">Grade: {prospect.grade}</span>
+                          <span className="meta-grade">
+                            <span className="hide-on-mobile">Grade: </span>
+                            {prospect.grade}
+                          </span>
                         </div>
                       </div>
                     </div>
                     
                     <div className="card-right">
                       <button 
-                        className="btn-outline-pill"
+                        className="btn-outline-pill btn-profile-compact"
                         onClick={() => setSelectedProfileId(prospect.id)}
                       >
-                        Ver Perfil
+                        <span className="btn-text">Ver Perfil</span>
+                        <span className="btn-icon-mobile">≡</span>
                       </button>
                       <button 
-                        className="btn-primary-pill"
+                        className="btn-primary-pill btn-draft-compact"
                         disabled={!isUserTurn}
                         onClick={() => onUserDraftPick(prospect.id)}
                       >
