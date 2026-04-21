@@ -355,7 +355,7 @@ function App() {
                   
                   <div className="pill-separator"></div>
 
-                  {['QB', 'RB', 'WR', 'TE', 'OT', 'IOL', 'EDGE', 'DL', 'IDL', 'LB', 'CB', 'S'].map(pos => (
+                  {['QB', 'RB', 'WR', 'TE', 'OT', 'IOL', 'EDGE', 'IDL', 'LB', 'CB', 'S'].map(pos => (
                     <button 
                       key={pos}
                       className={`pill-btn ${logSelectedPositions.includes(pos) ? 'active-pos' : ''}`}
@@ -490,7 +490,7 @@ function App() {
 
                   <div className="pill-separator"></div>
 
-                  {['EDGE', 'DL', 'IDL', 'LB', 'CB', 'S'].map(pos => (
+                  {['EDGE', 'IDL', 'LB', 'CB', 'S'].map(pos => (
                     availablePositions.includes(pos) && (
                       <button 
                         key={pos}

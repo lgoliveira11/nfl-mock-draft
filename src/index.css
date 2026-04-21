@@ -989,9 +989,25 @@ h1, h2, h3, h4, h5, h6 {
   padding-bottom: 0.2rem;
 }
 
-.pill-filters::-webkit-scrollbar { height: 0px; }
+.pill-filters::-webkit-scrollbar { 
+  height: 6px; 
+}
+
+.pill-filters::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pill-filters::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+.pill-filters::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
 
 .pill-btn {
+  flex-shrink: 0;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);
@@ -1025,6 +1041,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .pill-separator {
+  flex-shrink: 0;
   width: 1px;
   height: 16px;
   background: rgba(255, 255, 255, 0.2);

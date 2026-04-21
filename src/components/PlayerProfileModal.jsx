@@ -1,13 +1,15 @@
 import React from 'react';
 
-const getGradeColor = (grade) => {
+const getGradeColor = (g) => {
+  const grade = Number(g) || 0;
   if (grade >= 7.0) return 'var(--success)';
   if (grade >= 6.5) return 'var(--accent-primary)';
   if (grade >= 6.0) return 'var(--warning)';
   return 'var(--danger)';
 };
 
-const getTierText = (grade) => {
+const getTierText = (g) => {
+  const grade = Number(g) || 0;
   if (grade >= 7.5) return 'Elite';
   if (grade >= 7.0) return '1st Round';
   if (grade >= 6.5) return 'Starter';
@@ -15,7 +17,8 @@ const getTierText = (grade) => {
   return 'Backup';
 };
 
-const getLetterGrade = (grade) => {
+const getLetterGrade = (g) => {
+  const grade = Number(g) || 0;
   if (grade >= 7.5) return 'A';
   if (grade >= 7.0) return 'B+';
   if (grade >= 6.5) return 'B';
@@ -73,7 +76,7 @@ const PlayerProfileModal = ({ playerData, onClose }) => {
             
             <div className="profile-tags">
               <span className="pos-badge" style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>{playerData.position || 'N/A'}</span>
-              <span className="pos-badge" style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}>Dia {playerData.grade >= 6.5 ? '1/2' : '3'}</span>
+              <span className="pos-badge" style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}>Dia {Number(playerData.grade) >= 6.5 ? '1/2' : '3'}</span>
             </div>
 
             <div className="profile-bio">
@@ -87,7 +90,7 @@ const PlayerProfileModal = ({ playerData, onClose }) => {
           
           <div className="profile-grade-circle" style={{ borderColor: getGradeColor(playerData.grade) }}>
             <div className="grade-score" style={{ color: getGradeColor(playerData.grade) }}>
-              {playerData.grade?.toFixed(2) || '0.00'}
+              {playerData.grade ? Number(playerData.grade).toFixed(2) : '0.00'}
             </div>
             <div className="grade-letter">{getLetterGrade(playerData.grade)}</div>
             <div className="grade-tier">{getTierText(playerData.grade)}</div>
@@ -141,7 +144,7 @@ const PlayerProfileModal = ({ playerData, onClose }) => {
                           background: getGradeColor(value)
                         }}></div>
                       </div>
-                      <div className="scout-bar-value">{value.toFixed(2)}</div>
+                      <div className="scout-bar-value">{Number(value).toFixed(2)}</div>
                     </div>
                   );
                 })}
@@ -154,7 +157,7 @@ const PlayerProfileModal = ({ playerData, onClose }) => {
                       color: getGradeColor(playerData.notas['NOTA FINAL']),
                       fontWeight: 800,
                       fontSize: '1.2rem'
-                    }}>{playerData.notas['NOTA FINAL'].toFixed(2)}</div>
+                    }}>{Number(playerData.notas['NOTA FINAL']).toFixed(2)}</div>
                   </div>
                 )}
               </div>
