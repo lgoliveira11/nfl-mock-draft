@@ -195,22 +195,17 @@ function App() {
         <div className="app-brand">
           <h1>NFL Mock Draft</h1>
         </div>
-        <div className="user-info">
-          <span style={{ color: 'var(--text-secondary)' }}>Você controla: </span>
-          <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            {userTeams.length > 5 ? (
-              <strong>{userTeams.length} times</strong>
-            ) : (
-              userTeams.map(teamAbbr => {
-                const team = draftOrder.find(t => t.abbr === teamAbbr);
-                return team ? (
-                  <div key={teamAbbr} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <img src={team.logo} alt={teamAbbr} title={teamAbbr} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                    <strong>{teamAbbr}</strong>
-                  </div>
-                ) : null;
-              })
-            )}
+        <div className="header-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div className="speed-control">
+            <select 
+              value={draftSpeed} 
+              onChange={(e) => setDraftSpeed(e.target.value)}
+            >
+              <option value="slow">Lento</option>
+              <option value="normal">Normal</option>
+              <option value="fast">Rápido</option>
+              <option value="instant">Instantâneo</option>
+            </select>
           </div>
           <button className="btn btn-outline" onClick={() => window.location.reload()}>
             Reiniciar
@@ -219,17 +214,7 @@ function App() {
       </header>
 
       <div className="main-content redesigned">
-        {!isDraftComplete && (
-          <div className="banner glow-panel">
-            <div className="banner-logo">
-              <img src={currentTeamOnClock.logo} alt={currentTeamOnClock.abbr} />
-            </div>
-            <div className="banner-text">
-              <span className="banner-subtitle">ON THE CLOCK</span>
-              <h2 className="banner-title">{currentTeamOnClock.team}</h2>
-            </div>
-          </div>
-        )}
+
 
         {isDraftComplete && (
           <div className="post-draft-container-full">
@@ -317,9 +302,7 @@ function App() {
           <div className="layout-grid">
             {/* LEFT COLUMN: DRAFT LOG */}
             <div className={`sidebar left-log tab-content ${activeTab === 'history' ? 'active' : 'hidden'}`}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <h3 className="section-title" style={{ margin: 0 }}>Histórico de Escolhas</h3>
-              </div>
+
               
               <div className="filters-container">
                 <div className="search-bar">
@@ -390,32 +373,23 @@ function App() {
                          <div className="log-left" style={{ flex: 1 }}>
                            <div className="log-pick-num">{String(t.pick).padStart(2, '0')}</div>
                            <div className="log-team"><img src={t.logo} alt="logo" /></div>
-                           <div className="log-player-name">
-                             {isPast && pastPick ? pastPick.player.name : ""}
+                           <div className="log-team-abbr" style={{ fontWeight: 800, minWidth: '40px' }}>{t.abbr}</div>
+                           <div className={`log-player-name ${isCurrent ? 'is-current' : ''}`}>
+                             {isPast && pastPick ? pastPick.player.name : (isCurrent ? 'ON THE CLOCK' : '')}
                            </div>
                          </div>
                          <div className="log-right" style={{ gap: '1rem' }}>
                            <div className="log-needs-badges" style={{ flexWrap: 'nowrap' }}>
                              {isPast && pastPick ? (
-                               <span className={`pos-badge custom-badge tiny-badge ${getPositionClass(pastPick.player.position)}`}>
+                               <span className={`pos-badge-minimal ${getPositionClass(pastPick.player.position)}`}>
                                  {pastPick.player.position}
                                </span>
                              ) : (
-                               t.needs && t.needs.slice(0, 4).map(n => (
-                                 <span key={n} className={`pos-badge custom-badge tiny-badge ${getPositionClass(n)}`}>{n}</span>
-                               ))
+                               <span className="log-needs-text" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+                                 {t.needs && t.needs.slice(0, 4).join('   ')}
+                               </span>
                              )}
                            </div>
-                           
-                           {isPast && pastPick && (
-                             <button 
-                               className="btn-outline-pill mini"
-                               style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
-                               onClick={() => setSelectedProfileId(pastPick.player.id)}
-                             >
-                               Ver Perfil
-                             </button>
-                           )}
                          </div>
                        </div>
                      );
@@ -428,19 +402,7 @@ function App() {
             <div className={`draft-board right-board tab-content ${activeTab === 'prospects' ? 'active' : 'hidden'}`}>
               <div className="board-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <h3 className="section-title" style={{ margin: 0 }}>Prospectos</h3>
-                  <div className="speed-control">
-                    <span>Velocidade CPU:</span>
-                    <select 
-                      value={draftSpeed} 
-                      onChange={(e) => setDraftSpeed(e.target.value)}
-                    >
-                      <option value="slow">Lenta</option>
-                      <option value="normal">Normal</option>
-                      <option value="fast">Rápida</option>
-                      <option value="instant">Instantânea</option>
-                    </select>
-                  </div>
+                  {/* Prospect text title removed */}
                 </div>
                 <div>
                   {isUserTurn && <strong style={{ color: 'var(--accent-primary)' }}>É a sua vez de escolher!</strong>}
@@ -509,27 +471,22 @@ function App() {
                   <div key={prospect.id} className="prospect-card-horizontal">
                     <div className="card-left">
                       <div className="prospect-rank">{String(prospect.rank).padStart(2, '0')}</div>
+                      <div className="prospect-pos-badge" style={{ margin: '0 0.5rem' }}>
+                        <span className={`pos-badge-minimal ${getPositionClass(prospect.position)}`}>
+                          {prospect.position}
+                        </span>
+                      </div>
                       <div className="prospect-details-v">
-                        <h3 className="prospect-name-row">
+                        <h3 className="prospect-name-row" style={{ margin: 0 }}>
                           <span className="player-name">{prospect.name}</span>
-                          {currentTeamOnClock?.needs?.includes(prospect.position) && (
-                            <span className="team-need-badge">NEED</span>
-                          )}
                         </h3>
-                        <div className="prospect-meta">
-                          <span className={`pos-badge custom-badge ${getPositionClass(prospect.position)}`}>
-                            {prospect.position}
-                          </span>
-                          <span className="meta-sep">|</span>
-                          <span className="meta-grade">
-                            <span className="hide-on-mobile">Grade: </span>
-                            {prospect.grade}
-                          </span>
-                        </div>
                       </div>
                     </div>
                     
                     <div className="card-right">
+                      {currentTeamOnClock?.needs?.includes(prospect.position) && (
+                        <span className="team-need-badge">TEAM NEED</span>
+                      )}
                       <button 
                         className="btn-outline-pill btn-profile-compact"
                         onClick={() => setSelectedProfileId(prospect.id)}
