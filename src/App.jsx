@@ -647,13 +647,14 @@ function App() {
                     
                     <div className="card-right">
                       {currentTeamOnClock?.needs?.includes(prospect.position) && (
-                        <span className="team-need-badge">TEAM NEED</span>
+                        <span className="team-need-badge">NEED</span>
                       )}
                       <button 
-                        className="btn-outline-pill btn-profile-compact"
+                        className="btn-icon-only"
+                        style={{ background: 'none', border: 'none', padding: '0 0.5rem', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
                         onClick={() => setSelectedProfileId(prospect.id)}
                       >
-                        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>≡</span>
+                        <i className="fas fa-address-card" style={{ fontSize: '1.2rem' }}></i>
                       </button>
                       <button 
                         className="btn-primary-pill btn-draft-compact"
