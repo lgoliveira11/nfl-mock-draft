@@ -23,6 +23,7 @@ function App() {
   const [logSearchQuery, setLogSearchQuery] = useState("");
   const [logSelectedPositions, setLogSelectedPositions] = useState([]);
   const [activeTab, setActiveTab] = useState('prospects');
+  const [expandedLogPicks, setExpandedLogPicks] = useState([]);
   const currentPickRef = useRef(null);
 
   // Initialize draft based on configuration
@@ -127,6 +128,14 @@ function App() {
       });
     }
   }, [currentPickIndex, activeTab]);
+
+  // Auto-expand current pick
+  useEffect(() => {
+    if (!isDraftComplete && setupConfig) {
+      const currentPick = currentPickIndex + 1;
+      setExpandedLogPicks(prev => prev.includes(currentPick) ? prev : [...prev, currentPick]);
+    }
+  }, [currentPickIndex, isDraftComplete, setupConfig]);
   const displayedProspects = useMemo(() => {
     const searchLower = searchQuery.toLowerCase();
     return availableProspects.filter(p => {
@@ -367,34 +376,75 @@ function App() {
                      if (isCurrent) highlightClass = "current-pick-highlight";
                      else if (isPast && isUserControlled) highlightClass = "active";
 
+                     const isExpanded = expandedLogPicks.includes(t.pick);
+                     const toggleExpand = () => {
+                       setExpandedLogPicks(prev => prev.includes(t.pick) ? prev.filter(p => p !== t.pick) : [...prev, t.pick]);
+                     };
+                     
+                     const teamPastPicks = draftHistory.filter(h => h.team.abbr === t.abbr);
+                     const teamFuturePicks = setupConfig.draftOrder.map((teamObj, idx) => ({team: teamObj, pick: idx + 1})).filter(p => p.team.abbr === t.abbr && p.pick > currentPickIndex + 1);
+                     const isTeamOnClock = currentTeamOnClock && currentTeamOnClock.abbr === t.abbr;
+
                      return (
-                       <div 
-                         key={t.pick} 
-                         ref={isCurrent ? currentPickRef : null}
-                         className={`log-item log-item-horizontal ${highlightClass}`}
-                         style={{ opacity }}
-                       >
-                         <div className="log-left" style={{ flex: 1 }}>
-                           <div className="log-pick-num">{String(t.pick).padStart(2, '0')}</div>
-                           <div className="log-team"><img src={t.logo} alt="logo" /></div>
-                           <div className="log-team-abbr" style={{ fontWeight: 800, minWidth: '40px' }}>{t.abbr}</div>
-                           <div className={`log-player-name ${isCurrent ? 'is-current' : ''}`}>
-                             {isPast && pastPick ? pastPick.player.name : (isCurrent ? 'ON THE CLOCK' : '')}
+                       <div key={t.pick} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px' }}>
+                         <div 
+                           ref={isCurrent ? currentPickRef : null}
+                           className={`log-item log-item-horizontal ${highlightClass}`}
+                           style={{ opacity, cursor: 'pointer' }}
+                           onClick={toggleExpand}
+                         >
+                           <div className="log-left" style={{ flex: 1 }}>
+                             <div className="log-pick-num">{String(t.pick).padStart(2, '0')}</div>
+                             <div className="log-team"><img src={t.logo} alt="logo" /></div>
+                             <div className="log-team-abbr" style={{ fontWeight: 800, minWidth: '40px' }}>{t.abbr}</div>
+                             <div className={`log-player-name ${isCurrent ? 'is-current' : ''}`}>
+                               {isPast && pastPick ? pastPick.player.name : (isCurrent ? 'ON THE CLOCK' : '')}
+                             </div>
+                           </div>
+                           <div className="log-right" style={{ gap: '1rem' }}>
+                             <div className="log-needs-badges" style={{ flexWrap: 'nowrap' }}>
+                               {isPast && pastPick ? (
+                                 <span className={`pos-badge-minimal ${getPositionClass(pastPick.player.position)}`}>
+                                   {pastPick.player.position}
+                                 </span>
+                               ) : (
+                                 <span className="log-needs-text" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+                                   {t.needs && t.needs.slice(0, 4).join('   ')}
+                                 </span>
+                               )}
+                             </div>
+                             <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                                 <polyline points="6 9 12 15 18 9"></polyline>
+                               </svg>
+                             </div>
                            </div>
                          </div>
-                         <div className="log-right" style={{ gap: '1rem' }}>
-                           <div className="log-needs-badges" style={{ flexWrap: 'nowrap' }}>
-                             {isPast && pastPick ? (
-                               <span className={`pos-badge-minimal ${getPositionClass(pastPick.player.position)}`}>
-                                 {pastPick.player.position}
-                               </span>
-                             ) : (
-                               <span className="log-needs-text" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-                                 {t.needs && t.needs.slice(0, 4).join('   ')}
-                               </span>
+
+                         {isExpanded && (
+                           <div className="log-item-body">
+                             <div className="team-picks-grid">
+                               {teamPastPicks.map(tp => (
+                                 <div key={tp.pick} className="team-pick-item">
+                                   <span className="tp-num">{String(tp.pick).padStart(2, '0')}</span>
+                                   <span className={`pos-badge-minimal ${getPositionClass(tp.player.position)}`}>{tp.player.position}</span>
+                                   <span className="tp-name">{tp.player.name}</span>
+                                 </div>
+                               ))}
+                               {isTeamOnClock && (
+                                 <div className="team-pick-item is-current-pick-item">
+                                   <span className="tp-num">{String(currentPickIndex + 1).padStart(2, '0')}</span>
+                                   <span className="text-on-the-clock">ON THE CLOCK</span>
+                                 </div>
+                               )}
+                             </div>
+                             {teamFuturePicks.length > 0 && (
+                               <div className="future-picks-row">
+                                 <strong>Próximas escolhas:</strong> {teamFuturePicks.map(fp => fp.pick).join(', ')}
+                               </div>
                              )}
                            </div>
-                         </div>
+                         )}
                        </div>
                      );
                   })
