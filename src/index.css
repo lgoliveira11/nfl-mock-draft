@@ -36,7 +36,7 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden; /* Prevent global horizontal overflow */
   background-image: 
     radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
@@ -1066,8 +1066,9 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.2rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.5rem;
+  width: 100%;
 }
 
 .pill-filters::-webkit-scrollbar { 
@@ -1544,7 +1545,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .teams-selection-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 0.8rem;
 }
 
@@ -1610,5 +1611,21 @@ h1, h2, h3, h4, h5, h6 {
   
   .setup-title {
     font-size: 1.5rem;
+  }
+
+  .setup-page {
+    padding: 1rem;
+  }
+
+  .app-container {
+    padding: 0.75rem;
+  }
+
+  .layout-grid {
+    gap: 0.5rem;
+  }
+
+  .pill-filters {
+    padding-left: 2px;
   }
 }
