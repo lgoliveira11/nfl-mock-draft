@@ -248,6 +248,9 @@ function App() {
           <button className="btn btn-outline" onClick={() => window.location.reload()}>
             Reiniciar
           </button>
+          <a href="/tracker" className="btn btn-outline" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <i className="fas fa-chart-bar"></i> Tracker
+          </a>
         </div>
       </header>
 
