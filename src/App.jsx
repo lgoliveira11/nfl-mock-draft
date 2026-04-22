@@ -400,15 +400,7 @@ function App() {
 
             {/* RIGHT COLUMN: PROSPECT BOARD */}
             <div className={`draft-board right-board tab-content ${activeTab === 'prospects' ? 'active' : 'hidden'}`}>
-              <div className="board-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {/* Prospect text title removed */}
-                </div>
-                <div>
-                  {isUserTurn && <strong style={{ color: 'var(--accent-primary)' }}>É a sua vez de escolher!</strong>}
-                  {!isUserTurn && <span style={{ color: 'var(--text-muted)' }}>Aguardando escolha da CPU...</span>}
-                </div>
-              </div>
+
 
               <div className="filters-container">
                 <div className="search-bar">
@@ -491,8 +483,7 @@ function App() {
                         className="btn-outline-pill btn-profile-compact"
                         onClick={() => setSelectedProfileId(prospect.id)}
                       >
-                        <span className="btn-text">Ver Perfil</span>
-                        <span className="btn-icon-mobile">≡</span>
+                        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>≡</span>
                       </button>
                       <button 
                         className="btn-primary-pill btn-draft-compact"
