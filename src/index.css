@@ -2382,104 +2382,97 @@ h1, h2, h3, h4, h5, h6 {
 .tracker-board-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  gap: 1.25rem;
+  padding: 0.75rem 1.25rem;
   background: var(--bg-secondary);
-  cursor: pointer;
-  transition: all 0.15s;
-  min-height: 46px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  margin-bottom: 0.4rem;
+  position: relative;
+  min-height: 54px;
 }
+
 .tracker-board-row:hover {
+  background: rgba(255, 255, 255, 0.03);
   border-color: var(--border-color-hover);
-  background: rgba(255,255,255,0.03);
-}
-.tracker-board-row.is-drafted {
-  background: var(--bg-tertiary);
-  opacity: 0.75;
-}
-.tracker-board-row.is-drafted:hover { opacity: 1; }
-.tracker-board-row.is-available:hover {
-  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateX(4px);
 }
 
 .tbr-rank {
+  width: 40px;
   font-family: 'Outfit', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 900;
+  font-size: 1.1rem;
   color: var(--text-muted);
-  min-width: 30px;
-  text-align: right;
-}
-
-.tbr-pos { flex-shrink: 0; }
-
-.tbr-name {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  min-width: 0;
-}
-
-.tbr-name-drafted {
-  text-decoration: line-through;
-  color: var(--text-muted);
-}
-
-.tbr-grade {
-  font-size: 0.73rem;
-  color: var(--text-muted);
-  font-family: monospace;
-  font-weight: 700;
   flex-shrink: 0;
+  text-align: right;
 }
 
 .tbr-pick-info {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  min-width: 100px;
-}
-
-.tbr-undrafted {
-  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 110px;
+  flex-shrink: 0;
 }
 
 .tbr-team-logo {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  filter: drop-shadow(0 0 2px rgba(255,255,255,0.25));
 }
 
 .tbr-team-abbr {
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   color: var(--text-primary);
 }
 
-.tbr-pick-num {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  font-family: monospace;
+.tbr-pos {
+  width: 70px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.tbr-available {
-  font-size: 0.72rem;
+.tbr-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 0;
+}
+
+.tbr-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tbr-name-drafted {
+  text-decoration: line-through;
   color: var(--text-muted);
-  opacity: 0.5;
-  font-style: italic;
+  opacity: 0.6;
+}
+
+.tbr-grade {
+  width: 50px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .tbr-action {
+  width: 70px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
   flex-shrink: 0;
-  width: 28px;
 }
 
 /* ── Tracker Modal: fields ── */

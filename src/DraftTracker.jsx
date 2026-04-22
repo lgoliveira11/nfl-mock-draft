@@ -145,6 +145,24 @@ export default function DraftTracker() {
     if (slot && slot.round) setSelectedPicksRound(slot.round);
   }, [loadPicks]);
 
+  // ─── Realtime Subscription ────────────────────────────────────────────────
+  useEffect(() => {
+    // Escutar mudanças em picks e trades
+    const channel = supabase
+      .channel('draft_realtime_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_picks' }, () => {
+        loadPicks();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_trades' }, () => {
+        loadPicks();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadPicks]);
+
   // ─── Auth ──────────────────────────────────────────────────────────────────
   function handleLogin() {
     if (loginInput === MASTER_PASSWORD) {
@@ -663,7 +681,16 @@ export default function DraftTracker() {
                     <div 
                       key={pickNumber} 
                       className={`tracker-board-row ${pickData ? 'is-drafted' : isOnTheClock ? 'current-pick-highlight' : 'is-available'} ${isTradedPick ? 'is-traded-pick' : ''}`}
-                      onClick={() => !pickData && openModal({ id: `slot-${pickNumber}`, rank: pickNumber, name: "Escolha do Draft", position: "PICK" })}
+                      onClick={() => {
+                        if (!pickData) {
+                          // Se clicar em uma pick vazia, muda para a visão de board 
+                          // e já deixa o número da pick pré-configurado
+                          setPickInput(String(pickNumber));
+                          setView('board');
+                          // Opcional: focar no campo de busca
+                          document.querySelector('.tracker-search-input')?.focus();
+                        }
+                      }}
                       style={{ cursor: pickData ? 'default' : 'pointer' }}
                     >
                       <div className="tbr-rank" style={{ color: 'var(--text-primary)' }}>#{String(pickNumber).padStart(2,'0')}</div>
@@ -678,7 +705,7 @@ export default function DraftTracker() {
                           <div className="tbr-pos">
                             <span className="tpr-pos-badge" style={{ background:`${posColor(pickData.position)}18`, color:posColor(pickData.position), borderColor:`${posColor(pickData.position)}44` }}>{pickData.position}</span>
                           </div>
-                          <div className="tbr-name" style={{ flex: 1 }}>
+                          <div className="tbr-name">
                             <span>{pickData.playerName}</span>
                             {isTradedPick && (
                               <span 
@@ -692,22 +719,42 @@ export default function DraftTracker() {
                           </div>
                         </>
                       ) : (
-                        <div className="tbr-name" style={{ flex: 1, color: isOnTheClock ? '#93c5fd' : 'var(--text-muted)', fontWeight: isOnTheClock ? 800 : 400 }}>
-                          {isOnTheClock ? 'ON THE CLOCK' : 'PREVISTA'}
-                          {isTradedPick && (
-                            <span 
-                              className="trade-badge clickable" 
-                              style={{marginLeft: '0.5rem'}}
-                              onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pickNumber)); }}
-                              title="Ver detalhes da troca"
-                            >
-                              <i className="fas fa-arrows-rotate"></i> via troca
-                            </span>
-                          )}
-                        </div>
+                        <>
+                          <div className="tbr-pos">
+                            {/* Espaço reservado para manter alinhamento */}
+                          </div>
+                          <div className="tbr-name" style={{ color: isOnTheClock ? '#93c5fd' : 'var(--text-muted)', fontWeight: isOnTheClock ? 800 : 400 }}>
+                            <span>{isOnTheClock ? 'ON THE CLOCK' : 'PREVISTA'}</span>
+                            {isTradedPick && (
+                              <span 
+                                className="trade-badge clickable" 
+                                style={{marginLeft: '0.5rem'}}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pickNumber)); }}
+                                title="Ver detalhes da troca"
+                              >
+                                <i className="fas fa-arrows-rotate"></i> via troca
+                              </span>
+                            )}
+                          </div>
+                        </>
                       )}
                       
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>R{slot.round}</div>
+                      <div className="tbr-grade" style={{ fontSize: '0.72rem', opacity: 0.6 }}>R{slot.round}</div>
+                      <div className="tbr-action">
+                        {isMaster && pickData && (
+                          <button 
+                            className="tpr-btn tpr-btn-clear" 
+                            onClick={e => {
+                              // Encontrar o ID do jogador que ocupa esta pick
+                              const playerId = Object.keys(picks).find(id => picks[id].pickNumber === pickNumber);
+                              if (playerId) clearPick(playerId, e);
+                            }} 
+                            title="Remover"
+                          >
+                            <i className="fas fa-xmark"></i>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
