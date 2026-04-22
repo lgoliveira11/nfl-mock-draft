@@ -78,7 +78,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -105,7 +105,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -129,7 +129,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -164,7 +164,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
@@ -230,7 +230,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -267,7 +267,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -281,7 +281,7 @@ export const draftOrder = [
       "OT",
       "CB",
       "RB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -306,7 +306,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -343,7 +343,7 @@ export const draftOrder = [
     "needs": [
       "OT",
       "CB",
-      "DT",
+      "IDL",
       "EDGE"
     ]
   },
@@ -354,7 +354,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -404,7 +404,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-seattle-seahawks-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "LB",
       "S",
       "QB"
@@ -481,7 +481,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -495,7 +495,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -519,7 +519,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -534,7 +534,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -622,7 +622,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -674,7 +674,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -700,7 +700,7 @@ export const draftOrder = [
       "OT",
       "CB",
       "RB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -711,7 +711,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -737,7 +737,7 @@ export const draftOrder = [
     "needs": [
       "OT",
       "CB",
-      "DT",
+      "IDL",
       "EDGE"
     ]
   },
@@ -748,7 +748,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -771,7 +771,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
@@ -809,7 +809,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-seattle-seahawks-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "LB",
       "S",
       "QB"
@@ -873,7 +873,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -887,7 +887,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -911,7 +911,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -926,7 +926,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -965,7 +965,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -1027,7 +1027,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -1041,7 +1041,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1080,7 +1080,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -1094,7 +1094,7 @@ export const draftOrder = [
       "OT",
       "CB",
       "RB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1118,7 +1118,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -1179,7 +1179,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
@@ -1218,7 +1218,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-seattle-seahawks-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "LB",
       "S",
       "QB"
@@ -1233,7 +1233,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1258,7 +1258,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -1269,7 +1269,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -1345,7 +1345,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -1359,7 +1359,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1395,7 +1395,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -1536,7 +1536,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -1562,7 +1562,7 @@ export const draftOrder = [
       "OT",
       "CB",
       "RB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1573,7 +1573,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -1612,7 +1612,7 @@ export const draftOrder = [
     "needs": [
       "OT",
       "CB",
-      "DT",
+      "IDL",
       "EDGE"
     ]
   },
@@ -1677,7 +1677,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1689,7 +1689,7 @@ export const draftOrder = [
     "needs": [
       "OT",
       "CB",
-      "DT",
+      "IDL",
       "EDGE"
     ]
   },
@@ -1716,7 +1716,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -1730,7 +1730,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1754,7 +1754,7 @@ export const draftOrder = [
     "needs": [
       "OT",
       "CB",
-      "DT",
+      "IDL",
       "EDGE"
     ]
   },
@@ -1767,7 +1767,7 @@ export const draftOrder = [
     "needs": [
       "OT",
       "CB",
-      "DT",
+      "IDL",
       "EDGE"
     ]
   },
@@ -1790,7 +1790,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -1855,7 +1855,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1894,7 +1894,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -1908,7 +1908,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2048,7 +2048,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -2073,7 +2073,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2084,7 +2084,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -2110,7 +2110,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -2122,7 +2122,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -2187,7 +2187,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2387,7 +2387,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-seattle-seahawks-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "LB",
       "S",
       "QB"
@@ -2401,7 +2401,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -2416,7 +2416,7 @@ export const draftOrder = [
       "EDGE",
       "WR",
       "CB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2491,7 +2491,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2526,7 +2526,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -2576,7 +2576,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -2592,7 +2592,7 @@ export const draftOrder = [
       "OT",
       "CB",
       "RB",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2618,7 +2618,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2628,7 +2628,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
@@ -2746,7 +2746,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -2808,7 +2808,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -2848,7 +2848,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -2871,7 +2871,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-cincinnati-bengals-team-logo-300x300.png",
     "needs": [
       "OT",
-      "DT",
+      "IDL",
       "WR"
     ]
   },
@@ -2923,7 +2923,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -2945,7 +2945,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
@@ -2959,7 +2959,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -2973,7 +2973,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -2985,7 +2985,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -3011,7 +3011,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "CB",
-      "C"
+      "IOL"
     ]
   },
   {
@@ -3047,7 +3047,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -3083,7 +3083,7 @@ export const draftOrder = [
     "abbr": "HOU",
     "logo": "/logos/nfl-houston-texans-team-logo-2-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "CB"
     ]
   },
@@ -3096,7 +3096,7 @@ export const draftOrder = [
     "needs": [
       "QB",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -3107,7 +3107,7 @@ export const draftOrder = [
     "logo": "/logos/nfl-jacksonville-jaguars-team-logo-2-300x300.png",
     "needs": [
       "IOL",
-      "DT",
+      "IDL",
       "CB",
       "WR"
     ]
@@ -3146,7 +3146,7 @@ export const draftOrder = [
       "OT",
       "WR",
       "EDGE",
-      "DT"
+      "IDL"
     ]
   },
   {
@@ -3182,7 +3182,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
@@ -3195,7 +3195,7 @@ export const draftOrder = [
     "abbr": "LAR",
     "logo": "/logos/los-angeles-rams-2020-logo-300x300.png",
     "needs": [
-      "DT",
+      "IDL",
       "EDGE",
       "CB",
       "WR"
