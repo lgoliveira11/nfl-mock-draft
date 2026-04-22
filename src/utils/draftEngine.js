@@ -1,4 +1,4 @@
-export const getCpuPick = (availableProspects, currentTeam) => {
+export const getCpuPick = (availableProspects, currentTeam, teamDraftedPlayers = []) => {
   if (!availableProspects || availableProspects.length === 0) return null;
 
   // Se o time não tem needs cadastradas, vai direto de BPA
@@ -6,7 +6,10 @@ export const getCpuPick = (availableProspects, currentTeam) => {
     return availableProspects[0];
   }
 
-  const teamNeeds = currentTeam.needs;
+  // Filtra as needs para remover posições que já foram selecionadas pelo time nesta simulação
+  const draftedPositions = teamDraftedPlayers.map(p => p.player.position);
+  const teamNeeds = currentTeam.needs.filter(pos => !draftedPositions.includes(pos));
+
   const needBonuses = {};
 
   // Calcula o bônus base para cada posição de need listada pelo time.

@@ -5,7 +5,7 @@ import bigBoard from './data/bigboard.json';
 import pffBoard from './data/pff_board.json';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const MASTER_PASSWORD = 'nfldraft2025';
+const MASTER_PASSWORD = 'DraFt#2026!AdmIn_TrAckEr_X9';
 
 const BOARDS = {
   consensus: { label: 'Consensus', data: bigBoard },
@@ -55,6 +55,7 @@ export default function DraftTracker() {
   // Filters (board view)
   const [posFilter, setPosFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+  const [selectedPicksRound, setSelectedPicksRound] = useState(1);
 
   // Pick Modal
   const [modalPlayer, setModalPlayer] = useState(null);
@@ -67,11 +68,12 @@ export default function DraftTracker() {
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [tradeTeamA, setTradeTeamA] = useState(null);
   const [tradeTeamB, setTradeTeamB] = useState(null);
-  const [tradePicksAtoB, setTradePicksAtoB] = useState(''); // comma-separated
-  const [tradePicksBtoA, setTradePicksBtoA] = useState('');
+  const [tradePicksAtoB, setTradePicksAtoB] = useState([]); // Array of numbers
+  const [tradePicksBtoA, setTradePicksBtoA] = useState([]);
   const [tradeNote, setTradeNote] = useState('');
   const [tradeTeamSearch, setTradeTeamSearch] = useState('');
   const [tradeStep, setTradeStep] = useState(1); // 1=teams, 2=picks
+  const [selectedTrade, setSelectedTrade] = useState(null);
 
   // ─── Load ─────────────────────────────────────────────────────────────────
   const loadPicks = useCallback(async () => {
@@ -107,13 +109,41 @@ export default function DraftTracker() {
       const local = localStorage.getItem('dt_picks_v2');
       if (local) setPicks(JSON.parse(local));
     }
-    // Load trades from localStorage
-    const localTrades = localStorage.getItem('dt_trades_v2');
-    if (localTrades) setTrades(JSON.parse(localTrades));
+    // Load trades
+    try {
+      const { data: tradeData, error: tradeError } = await supabase
+        .from('draft_trades')
+        .select('*');
+      
+      if (!tradeError && tradeData && tradeData.length > 0) {
+        const formattedTrades = tradeData.map(t => ({
+          id: t.id,
+          teamA: t.team_a,
+          teamB: t.team_b,
+          picksAtoB: t.picks_a_to_b || [],
+          picksBtoA: t.picks_b_to_a || [],
+          note: t.note
+        }));
+        setTrades(formattedTrades);
+        localStorage.setItem('dt_trades_v2', JSON.stringify(formattedTrades));
+      } else {
+        const localTrades = localStorage.getItem('dt_trades_v2');
+        if (localTrades) setTrades(JSON.parse(localTrades));
+      }
+    } catch {
+      const localTrades = localStorage.getItem('dt_trades_v2');
+      if (localTrades) setTrades(JSON.parse(localTrades));
+    }
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadPicks(); }, [loadPicks]);
+  useEffect(() => { 
+    loadPicks();
+    // Definir round inicial baseado na próxima pick
+    const currentPickNum = Object.keys(picks).length + 1;
+    const slot = rawDraftOrder.find((_, idx) => idx + 1 === currentPickNum);
+    if (slot && slot.round) setSelectedPicksRound(slot.round);
+  }, [loadPicks]);
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
   function handleLogin() {
@@ -122,6 +152,7 @@ export default function DraftTracker() {
       setShowLogin(false);
       setLoginError('');
       setLoginInput('');
+      setSearch(''); // Limpar qualquer preenchimento automático do navegador
     } else {
       setLoginError('Senha incorreta');
     }
@@ -151,10 +182,23 @@ export default function DraftTracker() {
         if (error) throw error;
       }
 
-      // Remove deleted picks from DB
-      const playerIds = Object.keys(picks);
-      if (playerIds.length === 0) {
-        await supabase.from('draft_picks').delete().neq('player_id', '');
+      // ─── Save Trades ───
+      const tradeRows = trades.map(t => ({
+        id: t.id,
+        team_a: t.teamA,
+        team_b: t.teamB,
+        picks_a_to_b: t.picksAtoB,
+        picks_b_to_a: t.picksBtoA,
+        note: t.note
+      }));
+
+      // Clear old trades and insert new ones
+      await supabase.from('draft_trades').delete().neq('id', 0); // Limpa tudo
+      if (tradeRows.length > 0) {
+        const { error: tradeErr } = await supabase
+          .from('draft_trades')
+          .insert(tradeRows);
+        if (tradeErr) throw tradeErr;
       }
 
       setLastSaved(new Date());
@@ -167,9 +211,18 @@ export default function DraftTracker() {
   // ─── Open modal ────────────────────────────────────────────────────────────
   function openModal(player) {
     const existing = picks[String(player.id)];
+    // For undrafted players, suggest the next pick and expected team
+    const suggestedPickNum = existing?.pickNumber
+      ? String(existing.pickNumber)
+      : String(totalDrafted + 1);
+    const suggestedTeam = existing
+      ? ALL_TEAMS.find(t => t.abbr === existing.teamAbbr) || null
+      : getEffectiveTeam(totalDrafted + 1)
+        ? ALL_TEAMS.find(t => t.abbr === getEffectiveTeam(totalDrafted + 1)?.abbr) || null
+        : null;
     setModalPlayer(player);
-    setModalPickNum(existing?.pickNumber ? String(existing.pickNumber) : '');
-    setModalTeam(existing ? ALL_TEAMS.find(t => t.abbr === existing.teamAbbr) || null : null);
+    setModalPickNum(suggestedPickNum);
+    setModalTeam(suggestedTeam);
     setModalTeamSearch('');
     setTimeout(() => pickNumRef.current?.focus(), 100);
   }
@@ -225,15 +278,15 @@ export default function DraftTracker() {
 
   function openTradeModal() {
     setTradeTeamA(null); setTradeTeamB(null);
-    setTradePicksAtoB(''); setTradePicksBtoA('');
+    setTradePicksAtoB([]); setTradePicksBtoA([]);
     setTradeNote(''); setTradeTeamSearch('');
     setTradeStep(1); setShowTradeModal(true);
   }
 
   function confirmTrade() {
     if (!tradeTeamA || !tradeTeamB) return;
-    const picksAtoB = parsePickNums(tradePicksAtoB);
-    const picksBtoA = parsePickNums(tradePicksBtoA);
+    const picksAtoB = tradePicksAtoB;
+    const picksBtoA = tradePicksBtoA;
     if (picksAtoB.length === 0 && picksBtoA.length === 0) return;
     const newTrade = {
       id: Date.now(),
@@ -266,34 +319,53 @@ export default function DraftTracker() {
     return result;
   }
 
+  function getTradeForPick(pickNum) {
+    return [...trades].reverse().find(t => t.picksAtoB.includes(pickNum) || t.picksBtoA.includes(pickNum));
+  }
+
   // All picks touched by trades (sorted)
   const tradedPickNums = [...new Set(trades.flatMap(t => [...t.picksAtoB, ...t.picksBtoA]))].sort((a,b)=>a-b);
+
+  // Helper to get all picks currently owned by a team
+  function getTeamCurrentPicks(teamAbbr) {
+    if (!teamAbbr) return [];
+    return rawDraftOrder
+      .map((slot, idx) => ({ ...slot, pickNumber: idx + 1 }))
+      .filter(slot => {
+        const effective = getEffectiveTeam(slot.pickNumber);
+        return effective?.abbr === teamAbbr;
+      });
+  }
 
   // ─── Derived data ──────────────────────────────────────────────────────────
   const boardData = BOARDS[selectedBoard].data;
   const totalDrafted = Object.keys(picks).length;
 
-  const ALL_POSITIONS = [...new Set(boardData.map(p => p.position))].sort();
+  // Next pick tracking
+  const nextPickNumber = totalDrafted + 1;
+  const nextExpectedTeam = getEffectiveTeam(nextPickNumber);
+  const totalPicks = rawDraftOrder.length;
+  const nextSlot = rawDraftOrder[nextPickNumber - 1];
+  const isDraftComplete = nextPickNumber > totalPicks;
+
+  const ALL_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'OT', 'IOL', 'EDGE', 'IDL', 'LB', 'CB', 'S'];
 
   const filteredBoard = boardData.filter(player => {
-    const pid = String(player.id);
-    const isDrafted = !!picks[pid];
+    const isDrafted = !!picks[String(player.id)];
 
-    if (posFilter === 'DRAFTED') return isDrafted;
-    if (posFilter === 'UNDRAFTED') return !isDrafted;
-    if (posFilter !== 'ALL') return player.position === posFilter;
+    // 1. Position/Status Filter
+    if (posFilter === 'DRAFTED' && !isDrafted) return false;
+    if (posFilter === 'UNDRAFTED' && isDrafted) return false;
+    if (posFilter !== 'ALL' && posFilter !== 'DRAFTED' && posFilter !== 'UNDRAFTED' && player.position !== posFilter) return false;
 
-    const matchSearch = !search ||
-      player.name.toLowerCase().includes(search.toLowerCase()) ||
-      player.position.toLowerCase().includes(search.toLowerCase());
-
-    return matchSearch;
-  }).filter(player => {
-    if (posFilter === 'ALL' || posFilter === 'DRAFTED' || posFilter === 'UNDRAFTED') {
-      return !search ||
-        player.name.toLowerCase().includes(search.toLowerCase()) ||
-        player.position.toLowerCase().includes(search.toLowerCase());
+    // 2. Search Filter
+    if (search) {
+      const s = search.toLowerCase();
+      const nameMatch = player.name?.toLowerCase().includes(s);
+      const posMatch = player.position?.toLowerCase().includes(s);
+      if (!nameMatch && !posMatch) return false;
     }
+
     return true;
   });
 
@@ -321,7 +393,7 @@ export default function DraftTracker() {
           </a>
           <div>
             <h1>NFL Draft Tracker</h1>
-            <span className="tracker-subtitle">2025 NFL Draft · Ao Vivo</span>
+            <span className="tracker-subtitle">2026 NFL Draft · Ao Vivo</span>
           </div>
         </div>
 
@@ -397,9 +469,39 @@ export default function DraftTracker() {
       </div>
 
       {/* ── Content ── */}
-      {view === 'board' ? (
-        <div className="tracker-content">
-          {/* Filters */}
+      <div className="tracker-content">
+        {/* On The Clock banner - Visible in both views */}
+        {!isDraftComplete && nextExpectedTeam && (
+          <div className="tracker-otc-banner">
+            <div className="otc-left">
+              <span className="otc-label">ON THE CLOCK</span>
+              <img src={nextExpectedTeam.logo} alt={nextExpectedTeam.abbr} className="otc-logo" />
+              <span className="otc-team-name">{nextExpectedTeam.abbr}</span>
+              <span className="otc-team-full hide-on-mobile">{nextExpectedTeam.team}</span>
+            </div>
+            <div className="otc-right">
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <button className="btn-trade-register" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={openTradeModal}>
+                  <i className="fas fa-arrows-rotate"></i> TROCA
+                </button>
+                <div style={{ textAlign: 'right' }}>
+                  <span className="otc-pick-label">Escolha</span>
+                  <div className="otc-pick-num">#{String(nextPickNumber).padStart(2, '0')}</div>
+                  {nextSlot && <span className="otc-round">Round {nextSlot.round}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {isDraftComplete && (
+          <div className="tracker-otc-banner otc-complete">
+            <i className="fas fa-trophy"></i> Draft Concluído! {totalDrafted} jogadores selecionados.
+          </div>
+        )}
+
+        {view === 'board' ? (
+          <>
+            {/* Filters */}
           <div className="tracker-filters">
             <div className="tracker-search-wrap">
               <i className="fas fa-search tracker-search-icon"></i>
@@ -408,6 +510,9 @@ export default function DraftTracker() {
                 placeholder="Buscar jogador..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                autoComplete="off"
+                name="draftPlayerSearch"
+                spellCheck="false"
               />
             </div>
             <div className="tracker-pos-filters">
@@ -466,6 +571,16 @@ export default function DraftTracker() {
                     {/* Name */}
                     <div className="tbr-name">
                       <span className={isDrafted ? 'tbr-name-drafted' : ''}>{player.name}</span>
+                      {isDrafted && tradedPickNums.includes(pick.pickNumber) && (
+                        <span 
+                          className="trade-badge clickable" 
+                          style={{ marginLeft: '0.6rem' }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pick.pickNumber)); }}
+                          title="Ver detalhes da troca"
+                        >
+                          <i className="fas fa-arrows-rotate"></i> via troca
+                        </span>
+                      )}
                       {player.grade && (
                         <span className="tbr-grade">{Number(player.grade).toFixed(1)}</span>
                       )}
@@ -486,23 +601,26 @@ export default function DraftTracker() {
 
                     {/* Actions */}
                     <div className="tbr-action" onClick={e => e.stopPropagation()}>
-                      {isDrafted && (
-                        <button
-                          className="tpr-btn tpr-btn-clear"
-                          onClick={e => clearPick(player.id, e)}
-                          title="Remover"
-                        >
-                          <i className="fas fa-xmark"></i>
-                        </button>
-                      )}
-                      {!isDrafted && (
-                        <button
-                          className="tpr-btn tpr-btn-add"
-                          onClick={() => openModal(player)}
-                          title="Registrar pick"
-                        >
-                          <i className="fas fa-plus"></i>
-                        </button>
+                      {isMaster && (
+                        <>
+                          {isDrafted ? (
+                            <button
+                              className="tpr-btn tpr-btn-clear"
+                              onClick={e => clearPick(player.id, e)}
+                              title="Remover"
+                            >
+                              <i className="fas fa-xmark"></i>
+                            </button>
+                          ) : (
+                            <button
+                              className="tpr-btn tpr-btn-add"
+                              onClick={() => openModal(player)}
+                              title="Registrar pick"
+                            >
+                              <i className="fas fa-plus"></i>
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -513,81 +631,90 @@ export default function DraftTracker() {
               )}
             </div>
           )}
-        </div>
-      ) : (
-        /* ── Picks View ── */
-        <div className="tracker-content">
-          {/* Trades header */}
-          <div className="picks-view-header">
-            <span className="picks-view-title">
-              <i className="fas fa-stream"></i> {sortedPicks.length} picks registradas
-            </span>
-            <button className="btn-trade-register" onClick={openTradeModal}>
-              <i className="fas fa-arrows-rotate"></i> Registrar Troca
-            </button>
-          </div>
-
-          {/* Trades list */}
-          {trades.length > 0 && (
-            <div className="trades-list">
-              <div className="trades-list-title"><i className="fas fa-arrows-rotate"></i> Trocas Registradas</div>
-              {trades.map(t => (
-                <div key={t.id} className="trade-card">
-                  <div className="trade-card-teams">
-                    <div className="trade-side">
-                      <img src={t.teamA.logo} alt={t.teamA.abbr} className="tbr-team-logo" />
-                      <span className="tbr-team-abbr">{t.teamA.abbr}</span>
-                    </div>
-                    <div className="trade-arrows">
-                      {t.picksAtoB.length > 0 && <div className="trade-flow"><span className="trade-picks">{t.picksAtoB.map(n=>`#${n}`).join(', ')}</span><i className="fas fa-arrow-right trade-arrow"></i></div>}
-                      {t.picksBtoA.length > 0 && <div className="trade-flow"><i className="fas fa-arrow-left trade-arrow"></i><span className="trade-picks">{t.picksBtoA.map(n=>`#${n}`).join(', ')}</span></div>}
-                    </div>
-                    <div className="trade-side">
-                      <img src={t.teamB.logo} alt={t.teamB.abbr} className="tbr-team-logo" />
-                      <span className="tbr-team-abbr">{t.teamB.abbr}</span>
-                    </div>
-                    <button className="tpr-btn tpr-btn-clear" style={{marginLeft:'auto'}} onClick={() => deleteTrade(t.id)}><i className="fas fa-xmark"></i></button>
-                  </div>
-                  {t.note && <div className="trade-note">{t.note}</div>}
-                </div>
+            </>
+          ) : (
+            /* ── Picks View ── */
+            <>
+            <div className="round-selector" style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.4rem' }}>
+              {[1, 2, 3, 4, 5, 6, 7].map(round => (
+                <button 
+                  key={round}
+                  className={`pill-btn ${selectedPicksRound === round ? 'active' : ''}`}
+                  onClick={() => setSelectedPicksRound(round)}
+                >
+                  ROUND {round}
+                </button>
               ))}
             </div>
-          )}
 
-          {/* Picks list */}
-          {sortedPicks.length === 0 ? (
-            <div className="tracker-empty-search" style={{ padding: '2rem' }}>
-              Nenhuma pick registrada ainda. Alterne para Board para registrar picks.
-            </div>
-          ) : (
+            {/* Trades list removed from here as per user request to clean up UI */}
+
             <div className="tracker-board-list">
-              {sortedPicks.map(p => {
-                const isTradedPick = tradedPickNums.includes(p.pickNumber);
-                const originalTeam = rawDraftOrder[p.pickNumber - 1];
-                const effectiveTeam = getEffectiveTeam(p.pickNumber);
-                const isViaTradeByDifferentTeam = effectiveTeam && p.teamAbbr !== (originalTeam?.abbr);
-                return (
-                  <div key={p.playerId} className={`tracker-board-row is-drafted ${isTradedPick ? 'is-traded-pick' : ''}`}>
-                    <div className="tbr-rank" style={{ color: 'var(--text-primary)' }}>#{String(p.pickNumber).padStart(2,'0')}</div>
-                    <div className="tbr-pick-info" style={{ minWidth: 80 }}>
-                      <img src={p.teamLogo} alt={p.teamAbbr} className="tbr-team-logo" />
-                      <span className="tbr-team-abbr">{p.teamAbbr}</span>
+              {rawDraftOrder
+                .map((slot, idx) => ({ slot, pickNumber: idx + 1 }))
+                .filter(({ slot }) => slot.round === selectedPicksRound)
+                .map(({ slot, pickNumber }) => {
+                  const effectiveTeam = getEffectiveTeam(pickNumber);
+                  const pickData = Object.values(picks).find(p => p.pickNumber === pickNumber);
+                  const isTradedPick = tradedPickNums.includes(pickNumber);
+                  const isOnTheClock = pickNumber === nextPickNumber && !isDraftComplete;
+
+                  return (
+                    <div 
+                      key={pickNumber} 
+                      className={`tracker-board-row ${pickData ? 'is-drafted' : isOnTheClock ? 'current-pick-highlight' : 'is-available'} ${isTradedPick ? 'is-traded-pick' : ''}`}
+                      onClick={() => !pickData && openModal({ id: `slot-${pickNumber}`, rank: pickNumber, name: "Escolha do Draft", position: "PICK" })}
+                      style={{ cursor: pickData ? 'default' : 'pointer' }}
+                    >
+                      <div className="tbr-rank" style={{ color: 'var(--text-primary)' }}>#{String(pickNumber).padStart(2,'0')}</div>
+                      
+                      <div className="tbr-pick-info" style={{ minWidth: 80 }}>
+                        <img src={effectiveTeam?.logo || slot.logo} alt={effectiveTeam?.abbr || slot.abbr} className="tbr-team-logo" />
+                        <span className="tbr-team-abbr">{effectiveTeam?.abbr || slot.abbr}</span>
+                      </div>
+
+                      {pickData ? (
+                        <>
+                          <div className="tbr-pos">
+                            <span className="tpr-pos-badge" style={{ background:`${posColor(pickData.position)}18`, color:posColor(pickData.position), borderColor:`${posColor(pickData.position)}44` }}>{pickData.position}</span>
+                          </div>
+                          <div className="tbr-name" style={{ flex: 1 }}>
+                            <span>{pickData.playerName}</span>
+                            {isTradedPick && (
+                              <span 
+                                className="trade-badge clickable" 
+                                onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pickNumber)); }}
+                                title="Ver detalhes da troca"
+                              >
+                                <i className="fas fa-arrows-rotate"></i> via troca
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="tbr-name" style={{ flex: 1, color: isOnTheClock ? '#93c5fd' : 'var(--text-muted)', fontWeight: isOnTheClock ? 800 : 400 }}>
+                          {isOnTheClock ? 'ON THE CLOCK' : 'PREVISTA'}
+                          {isTradedPick && (
+                            <span 
+                              className="trade-badge clickable" 
+                              style={{marginLeft: '0.5rem'}}
+                              onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pickNumber)); }}
+                              title="Ver detalhes da troca"
+                            >
+                              <i className="fas fa-arrows-rotate"></i> via troca
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>R{slot.round}</div>
                     </div>
-                    <div className="tbr-pos">
-                      <span className="tpr-pos-badge" style={{ background:`${posColor(p.position)}18`, color:posColor(p.position), borderColor:`${posColor(p.position)}44` }}>{p.position}</span>
-                    </div>
-                    <div className="tbr-name" style={{ flex: 1 }}>
-                      <span>{p.playerName}</span>
-                      {isTradedPick && <span className="trade-badge"><i className="fas fa-arrows-rotate"></i> via troca</span>}
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>R{p.round}</div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
+            </>
           )}
         </div>
-      )}
 
       {/* ── Login Modal ── */}
       {showLogin && (
@@ -753,18 +880,101 @@ export default function DraftTracker() {
                     <i className="fas fa-arrows-rotate" style={{color:'var(--text-muted)'}}></i>
                     <div className="trade-side"><img src={tradeTeamB.logo} alt={tradeTeamB.abbr} className="tbr-team-logo" /><strong>{tradeTeamB.abbr}</strong></div>
                   </div>
-                  <label className="tracker-field-label" style={{marginTop:'1rem'}}>{tradeTeamA.abbr} cede as escolhas (separadas por vírgula)</label>
-                  <input className="tracker-input" placeholder="Ex: 5, 37, 105" value={tradePicksAtoB} onChange={e => setTradePicksAtoB(e.target.value)} />
-                  <label className="tracker-field-label" style={{marginTop:'0.75rem'}}>{tradeTeamB.abbr} cede as escolhas</label>
-                  <input className="tracker-input" placeholder="Ex: 3" value={tradePicksBtoA} onChange={e => setTradePicksBtoA(e.target.value)} />
+
+                  <div className="trade-picks-selector-grid">
+                    <div className="trade-picks-col">
+                      <label className="tracker-field-label">Escolhas de {tradeTeamA.abbr}</label>
+                      <div className="trade-picks-list">
+                        {getTeamCurrentPicks(tradeTeamA.abbr).map(p => (
+                          <div 
+                            key={p.pickNumber} 
+                            className={`trade-pick-item ${tradePicksAtoB.includes(p.pickNumber) ? 'selected' : ''}`}
+                            onClick={() => {
+                              if (tradePicksAtoB.includes(p.pickNumber)) setTradePicksAtoB(tradePicksAtoB.filter(n => n !== p.pickNumber));
+                              else setTradePicksAtoB([...tradePicksAtoB, p.pickNumber]);
+                            }}
+                          >
+                            <span className="tp-num">#{p.pickNumber}</span>
+                            <span className="tp-round">R{p.round}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="trade-picks-col">
+                      <label className="tracker-field-label">Escolhas de {tradeTeamB.abbr}</label>
+                      <div className="trade-picks-list">
+                        {getTeamCurrentPicks(tradeTeamB.abbr).map(p => (
+                          <div 
+                            key={p.pickNumber} 
+                            className={`trade-pick-item ${tradePicksBtoA.includes(p.pickNumber) ? 'selected' : ''}`}
+                            onClick={() => {
+                              if (tradePicksBtoA.includes(p.pickNumber)) setTradePicksBtoA(tradePicksBtoA.filter(n => n !== p.pickNumber));
+                              else setTradePicksBtoA([...tradePicksBtoA, p.pickNumber]);
+                            }}
+                          >
+                            <span className="tp-num">#{p.pickNumber}</span>
+                            <span className="tp-round">R{p.round}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   <label className="tracker-field-label" style={{marginTop:'0.75rem'}}>Notas (opcional)</label>
-                  <input className="tracker-input" placeholder="Ex: + futuras escolhas condicionais" value={tradeNote} onChange={e => setTradeNote(e.target.value)} />
+                  <input className="tracker-input" placeholder="Ex: troca de escolhas de 1ª rodada" value={tradeNote} onChange={e => setTradeNote(e.target.value)} />
+                  
                   <div style={{display:'flex',gap:'0.5rem',marginTop:'1rem'}}>
                     <button className="btn-login-tracker" onClick={() => setTradeStep(1)}><i className="fas fa-arrow-left"></i> Voltar</button>
-                    <button className="btn-save-tracker" style={{flex:1,justifyContent:'center'}} onClick={confirmTrade}><i className="fas fa-check"></i> Confirmar Troca</button>
+                    <button className="btn-save-tracker" style={{flex:1,justifyContent:'center', opacity: (tradePicksAtoB.length === 0 && tradePicksBtoA.length === 0) ? 0.5 : 1}} onClick={confirmTrade} disabled={tradePicksAtoB.length === 0 && tradePicksBtoA.length === 0}><i className="fas fa-check"></i> Confirmar Troca</button>
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Trade Details Modal ── */}
+      {selectedTrade && (
+        <div className="tracker-modal-overlay" onClick={() => setSelectedTrade(null)}>
+          <div className="tracker-modal" onClick={e => e.stopPropagation()}>
+            <div className="tracker-modal-header">
+              <h2><i className="fas fa-info-circle"></i> Detalhes da Troca</h2>
+              <button className="modal-close-btn" onClick={() => setSelectedTrade(null)}><i className="fas fa-xmark"></i></button>
+            </div>
+            <div className="tracker-modal-body">
+              <div className="trade-card" style={{ margin: 0, border: 'none', background: 'transparent' }}>
+                <div className="trade-card-teams">
+                  <div className="trade-side">
+                    <img src={selectedTrade.teamA.logo} alt={selectedTrade.teamA.abbr} className="tbr-team-logo" />
+                    <span className="tbr-team-abbr">{selectedTrade.teamA.abbr}</span>
+                  </div>
+                  <div className="trade-arrows">
+                    {selectedTrade.picksAtoB.length > 0 && <div className="trade-flow"><span className="trade-picks">{selectedTrade.picksAtoB.map(n=>`#${n}`).join(', ')}</span><i className="fas fa-arrow-right trade-arrow"></i></div>}
+                    {selectedTrade.picksBtoA.length > 0 && <div className="trade-flow"><i className="fas fa-arrow-left trade-arrow"></i><span className="trade-picks">{selectedTrade.picksBtoA.map(n=>`#${n}`).join(', ')}</span></div>}
+                  </div>
+                  <div className="trade-side">
+                    <img src={selectedTrade.teamB.logo} alt={selectedTrade.teamB.abbr} className="tbr-team-logo" />
+                    <span className="tbr-team-abbr">{selectedTrade.teamB.abbr}</span>
+                  </div>
+                </div>
+                {selectedTrade.note && <div className="trade-note" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.05)' }}>{selectedTrade.note}</div>}
+                
+                {isMaster && (
+                  <button 
+                    className="btn-login-tracker" 
+                    style={{ width: '100%', marginTop: '2rem', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                    onClick={() => {
+                      if (window.confirm("Deseja realmente desfazer esta troca? Os times das escolhas já feitas que dependiam desta troca serão alterados visualmente no tracker.")) {
+                        deleteTrade(selectedTrade.id);
+                        setSelectedTrade(null);
+                      }
+                    }}
+                  >
+                    <i className="fas fa-trash-can"></i> Desfazer esta Troca
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -298,8 +298,17 @@ h1, h2, h3, h4, h5, h6 {
   font-family: monospace;
   font-weight: 700;
   font-size: 0.8rem;
-  min-width: 35px;
+  min-width: 42px; /* Aumentado para acomodar EDGE confortavelmente */
   text-align: center;
+}
+
+.prospect-pos-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px; /* Ajustado para um equilíbrio melhor */
+  flex-shrink: 0;
+  margin: 0 0.5rem;
 }
 
 .custom-badge {
@@ -1145,6 +1154,23 @@ h1, h2, h3, h4, h5, h6 {
   color: #10b981;
 }
 
+.pill-btn.fulfilled-need {
+  opacity: 0.5;
+  text-decoration: line-through;
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+}
+
+.pill-btn.fulfilled-need::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 0.6rem;
+  color: #10b981;
+  text-decoration: none !important;
+}
+
 .pill-btn.active-pos {
   background: var(--accent-primary);
   color: white;
@@ -1403,22 +1429,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .team-need-badge {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.1);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.3);
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 0 0.4rem;
-  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-family: 'Outfit', sans-serif;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 18px;
-  min-width: 40px;
-  line-height: 1;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.1);
 }
 
@@ -2696,3 +2716,159 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
+.trade-picks-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.trade-picks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.trade-pick-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trade-pick-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-muted);
+}
+
+.trade-pick-item.selected {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.trade-pick-item .tp-num {
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.trade-pick-item .tp-round {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+/* ── Tracker: On The Clock Banner ── */
+.tracker-otc-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.08);
+  animation: otcPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes otcPulse {
+  0%, 100% { border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.08); }
+  50%       { border-color: rgba(59, 130, 246, 0.55); box-shadow: 0 0 28px rgba(59, 130, 246, 0.18); }
+}
+
+.otc-complete {
+  animation: none;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.06));
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: none;
+  color: #10b981;
+  font-weight: 700;
+  font-size: 0.9rem;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.otc-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.otc-label {
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #93c5fd;
+  text-transform: uppercase;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}
+
+.otc-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+}
+
+.otc-team-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.otc-team-full {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.otc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.otc-pick-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.otc-pick-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #93c5fd;
+  line-height: 1;
+}
+
+.otc-round {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .otc-team-full { display: none; }
+  .otc-logo { width: 28px; height: 28px; }
+  .otc-team-name { font-size: 1rem; }
+  .otc-pick-num { font-size: 1.1rem; }
+}

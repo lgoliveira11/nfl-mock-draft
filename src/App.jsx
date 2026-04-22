@@ -25,6 +25,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('prospects');
   const [expandedLogPicks, setExpandedLogPicks] = useState([]);
   const [activeProspectFilter, setActiveProspectFilter] = useState('TODOS');
+  const [selectedLogRound, setSelectedLogRound] = useState(1);
+  const [showTradeModal, setShowTradeModal] = useState(false);
   const currentPickRef = useRef(null);
   
   const ATAQUE_POS = ['QB', 'RB', 'WR', 'TE', 'OT', 'IOL'];
@@ -76,7 +78,8 @@ function App() {
       } else {
         const speedMap = { slow: 3000, normal: 1500, fast: 500 };
         const timer = setTimeout(() => {
-          const selectedProspect = getCpuPick(cpuProspects, currentTeam);
+          const teamDraftedPlayers = draftHistory.filter(h => h.team.abbr === currentTeam.abbr);
+          const selectedProspect = getCpuPick(cpuProspects, currentTeam, teamDraftedPlayers);
           if (selectedProspect) {
             handleMakePick(selectedProspect.id);
           }
@@ -135,11 +138,16 @@ function App() {
     }
   }, [currentPickIndex, activeTab]);
 
-  // Auto-expand current pick
+  // Auto-expand current pick e ajustar round atual no log
   useEffect(() => {
     if (!isDraftComplete && setupConfig) {
       const currentPick = currentPickIndex + 1;
       setExpandedLogPicks(prev => prev.includes(currentPick) ? prev : [...prev, currentPick]);
+      
+      const currentPickData = setupConfig.draftOrder[currentPickIndex];
+      if (currentPickData && currentPickData.round) {
+        setSelectedLogRound(currentPickData.round);
+      }
     }
   }, [currentPickIndex, isDraftComplete, setupConfig]);
   const displayedProspects = useMemo(() => {
@@ -151,12 +159,32 @@ function App() {
     });
   }, [availableProspects, selectedPositions, searchQuery]);
 
-  // Sincroniza o pre-filtro NEEDS se o time mudar
+  // Needs dinâmicas: remove posições que o time já selecionou
+  const activeNeeds = useMemo(() => {
+    if (!currentTeamOnClock || !currentTeamOnClock.needs) return [];
+    const teamDraftedPositions = draftHistory
+      .filter(h => h.team.abbr === currentTeamOnClock.abbr)
+      .map(h => h.player.position);
+    return currentTeamOnClock.needs.filter(pos => !teamDraftedPositions.includes(pos));
+  }, [currentTeamOnClock, draftHistory]);
+
+  const fulfilledNeeds = useMemo(() => {
+    if (!currentTeamOnClock || !currentTeamOnClock.needs) return [];
+    const teamDraftedPositions = draftHistory
+      .filter(h => h.team.abbr === currentTeamOnClock.abbr)
+      .map(h => h.player.position);
+    return currentTeamOnClock.needs.filter(pos => teamDraftedPositions.includes(pos));
+  }, [currentTeamOnClock, draftHistory]);
+
+  // Sincroniza o pre-filtro NEEDS se o time mudar ou se uma need for preenchida
   useEffect(() => {
-    if (activeProspectFilter === 'NEEDS' && currentTeamOnClock?.needs) {
-      setSelectedPositions(currentTeamOnClock.needs);
+    if (activeProspectFilter === 'NEEDS' && activeNeeds.length > 0) {
+      setSelectedPositions(activeNeeds);
+    } else if (activeProspectFilter === 'NEEDS' && activeNeeds.length === 0) {
+      setActiveProspectFilter('TODOS');
+      setSelectedPositions([]);
     }
-  }, [currentTeamOnClock, activeProspectFilter]);
+  }, [activeNeeds, activeProspectFilter]);
 
   if (!setupConfig) {
     return (
@@ -173,7 +201,7 @@ function App() {
   const handlePreFilterClick = (filterName) => {
     setActiveProspectFilter(filterName);
     if (filterName === 'TODOS') setSelectedPositions([]);
-    else if (filterName === 'NEEDS') setSelectedPositions(currentTeamOnClock?.needs || []);
+    else if (filterName === 'NEEDS') setSelectedPositions(activeNeeds);
     else if (filterName === 'ATAQUE') setSelectedPositions([...ATAQUE_POS]);
     else if (filterName === 'DEFESA') setSelectedPositions([...DEFESA_POS]);
     else if (filterName === 'S/T') setSelectedPositions([...ST_POS]);
@@ -187,7 +215,7 @@ function App() {
       else if (arraysEqual(newPos, ATAQUE_POS)) setActiveProspectFilter('ATAQUE');
       else if (arraysEqual(newPos, DEFESA_POS)) setActiveProspectFilter('DEFESA');
       else if (arraysEqual(newPos, ST_POS)) setActiveProspectFilter('S/T');
-      else if (currentTeamOnClock?.needs && arraysEqual(newPos, currentTeamOnClock.needs)) setActiveProspectFilter('NEEDS');
+      else if (activeNeeds.length > 0 && arraysEqual(newPos, activeNeeds)) setActiveProspectFilter('NEEDS');
       else setActiveProspectFilter('CUSTOM');
       
       return newPos;
@@ -206,25 +234,21 @@ function App() {
     const isPast = (pick.pick - 1) < currentPickIndex;
     const pastPick = isPast ? draftHistory.find(h => h.pick === pick.pick) : null;
     
-    // Team Filter: ALL or Current Team on Clock
-    const currentTeamAbbr = currentTeamOnClock?.abbr || "";
     const matchesTeam = logTeamFilter === 'ALL' || pick.abbr === logTeamFilter;
-    
-    // Name Search (Only applies if player is picked)
     const matchesSearch = !logSearchQuery || (pastPick && pastPick.player.name.toLowerCase().includes(logSearchQuery.toLowerCase()));
     
-    // Position Filter
     let matchesPos = logSelectedPositions.length === 0;
     if (!matchesPos) {
       if (isPast && pastPick) {
         matchesPos = logSelectedPositions.includes(pastPick.player.position);
       } else {
-        // If not picked yet, check against team needs
         matchesPos = pick.needs && pick.needs.some(n => logSelectedPositions.includes(n));
       }
     }
 
-    return matchesTeam && matchesSearch && matchesPos;
+    const matchesRound = pick.round === selectedLogRound;
+
+    return matchesTeam && matchesSearch && matchesPos && matchesRound;
   });
 
   return (
@@ -339,6 +363,41 @@ function App() {
           </div>
         )}
 
+        {!isDraftComplete && currentTeamOnClock && (
+          <div className="otc-banner-container">
+            <div className="tracker-otc-banner">
+              <div className="otc-left">
+                <span className="otc-label">ON THE CLOCK</span>
+                <img src={currentTeamOnClock.logo} alt={currentTeamOnClock.abbr} className="otc-logo" />
+                <div className="otc-info">
+                  <div className="otc-team-name">{currentTeamOnClock.abbr}</div>
+                  <div className="otc-team-full hide-on-mobile">{currentTeamOnClock.name}</div>
+                </div>
+              </div>
+
+              <div className="otc-center hide-on-mobile">
+                <div className="otc-needs-row">
+                  {currentTeamOnClock.needs && currentTeamOnClock.needs.slice(0, 5).map(need => (
+                    <span key={need} className="pos-badge-minimal tiny-badge">{need}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="otc-right">
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <button className="btn-trade-register" onClick={() => setShowTradeModal(true)}>
+                    <i className="fas fa-exchange-alt"></i> TROCA
+                  </button>
+                  <div className="otc-pick-info">
+                    <span className="otc-pick-label">PICK {currentPickIndex + 1}</span>
+                    <div className="otc-round">ROUND {currentTeamOnClock.round}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {!isDraftComplete && (
           <div className="layout-grid">
             {/* LEFT COLUMN: DRAFT LOG */}
@@ -346,6 +405,18 @@ function App() {
 
               
               <div className="filters-container">
+                <div className="round-selector" style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.75rem', overflowX: 'auto', paddingBottom: '0.4rem' }}>
+                  {Array.from(new Set((setupConfig?.draftOrder || []).map(p => p.round))).sort((a,b) => a-b).map(round => (
+                    <button 
+                      key={round}
+                      className={`pill-btn ${selectedLogRound === round ? 'active' : ''}`}
+                      onClick={() => setSelectedLogRound(round)}
+                      style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem' }}
+                    >
+                      ROUND {round}
+                    </button>
+                  ))}
+                </div>
                 <div className="search-bar">
                   <input 
                     type="text" 
@@ -480,74 +551,7 @@ function App() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: PROSPECT BOARD */}
             <div className={`draft-board right-board tab-content ${activeTab === 'prospects' ? 'active' : 'hidden'}`}>
-
-              {/* MOBILE ONLY ON THE CLOCK CARD */}
-              {currentTeamOnClock && (() => {
-                const teamPastPicks = draftHistory.filter(h => h.team.abbr === currentTeamOnClock.abbr);
-                const teamFuturePicks = setupConfig.draftOrder.map((teamObj, idx) => ({team: teamObj, pick: idx + 1})).filter(p => p.team.abbr === currentTeamOnClock.abbr && p.pick > currentPickIndex + 1);
-                const isExpanded = expandedLogPicks.includes(currentPickIndex + 1);
-                const toggleExpand = () => {
-                  setExpandedLogPicks(prev => prev.includes(currentPickIndex + 1) ? prev.filter(p => p !== currentPickIndex + 1) : [...prev, currentPickIndex + 1]);
-                };
-
-                return (
-                  <div className="mobile-only-otc-card">
-                    <div className="log-item-container current-pick-highlight">
-                      <div 
-                        className="log-item log-item-horizontal" 
-                        style={{ opacity: 1, cursor: 'pointer' }}
-                        onClick={toggleExpand}
-                      >
-                      <div className="log-left" style={{ flex: 1 }}>
-                        <div className="log-pick-num">{String(currentPickIndex + 1).padStart(2, '0')}</div>
-                        <div className="log-team"><img src={currentTeamOnClock.logo} alt="logo" /></div>
-                        <div className="log-team-abbr" style={{ fontWeight: 800, minWidth: '40px' }}>{currentTeamOnClock.abbr}</div>
-                        <div className="log-player-name is-current">
-                          ON THE CLOCK
-                        </div>
-                      </div>
-                      <div className="log-right" style={{ gap: '1rem' }}>
-                        <div className="log-needs-badges" style={{ flexWrap: 'nowrap' }}>
-                          <span className="log-needs-text" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-                            {currentTeamOnClock.needs && currentTeamOnClock.needs.slice(0, 4).join('   ')}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-
-                    {isExpanded && (
-                      <div className="log-item-body">
-                        <div className="team-picks-grid">
-                          {teamPastPicks.map(tp => (
-                            <div key={tp.pick} className="team-pick-item">
-                              <span className="tp-num">{String(tp.pick).padStart(2, '0')}</span>
-                              <span className={`pos-badge-minimal ${getPositionClass(tp.player.position)}`}>{tp.player.position}</span>
-                              <span className="tp-name">{tp.player.name}</span>
-                            </div>
-                          ))}
-                          <div className="team-pick-item is-current-pick-item">
-                            <span className="tp-num">{String(currentPickIndex + 1).padStart(2, '0')}</span>
-                            <span className="text-on-the-clock">ON THE CLOCK</span>
-                          </div>
-                        </div>
-                        {teamFuturePicks.length > 0 && (
-                          <div className="future-picks-row">
-                            <strong>Próximas escolhas:</strong> {teamFuturePicks.map(fp => fp.pick).join(', ')}
-                          </div>
-                        )}
-                      </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
 
               <div className="filters-container">
                 <div className="search-bar">
@@ -570,7 +574,7 @@ function App() {
                   <button 
                     className={`pill-btn ${activeProspectFilter === 'NEEDS' ? 'active-need' : ''}`}
                     onClick={() => handlePreFilterClick('NEEDS')}
-                    disabled={!currentTeamOnClock?.needs}
+                    disabled={activeNeeds.length === 0}
                   >
                     NEEDS
                   </button>
@@ -601,33 +605,45 @@ function App() {
                 </div>
                 
                 <div className="pill-filters pos-toggles" style={{ flexWrap: 'wrap' }}>
-                  {ATAQUE_POS.map(pos => (
-                    <button 
-                      key={pos}
-                      className={`pill-btn ${selectedPositions.includes(pos) ? 'active-pos' : ''}`}
-                      onClick={() => handlePositionToggle(pos)}
-                    >
-                      {pos}
-                    </button>
-                  ))}
-                  {DEFESA_POS.map(pos => (
-                    <button 
-                      key={pos}
-                      className={`pill-btn ${selectedPositions.includes(pos) ? 'active-pos-def' : ''}`}
-                      onClick={() => handlePositionToggle(pos)}
-                    >
-                      {pos}
-                    </button>
-                  ))}
-                  {ST_POS.map(pos => (
-                    <button 
-                      key={pos}
-                      className={`pill-btn ${selectedPositions.includes(pos) ? 'active-pos-st' : ''}`}
-                      onClick={() => handlePositionToggle(pos)}
-                    >
-                      {pos}
-                    </button>
-                  ))}
+                  {ATAQUE_POS.map(pos => {
+                    const isFulfilled = fulfilledNeeds.includes(pos);
+                    const isSelected = selectedPositions.includes(pos);
+                    return (
+                      <button 
+                        key={pos}
+                        className={`pill-btn ${isSelected ? 'active-pos' : ''} ${isFulfilled ? 'fulfilled-need' : ''}`}
+                        onClick={() => handlePositionToggle(pos)}
+                      >
+                        {pos}
+                      </button>
+                    );
+                  })}
+                  {DEFESA_POS.map(pos => {
+                    const isFulfilled = fulfilledNeeds.includes(pos);
+                    const isSelected = selectedPositions.includes(pos);
+                    return (
+                      <button 
+                        key={pos}
+                        className={`pill-btn ${isSelected ? 'active-pos-def' : ''} ${isFulfilled ? 'fulfilled-need' : ''}`}
+                        onClick={() => handlePositionToggle(pos)}
+                      >
+                        {pos}
+                      </button>
+                    );
+                  })}
+                  {ST_POS.map(pos => {
+                    const isFulfilled = fulfilledNeeds.includes(pos);
+                    const isSelected = selectedPositions.includes(pos);
+                    return (
+                      <button 
+                        key={pos}
+                        className={`pill-btn ${isSelected ? 'active-pos-st' : ''} ${isFulfilled ? 'fulfilled-need' : ''}`}
+                        onClick={() => handlePositionToggle(pos)}
+                      >
+                        {pos}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -636,7 +652,7 @@ function App() {
                   <div key={prospect.id} className="prospect-card-horizontal">
                     <div className="card-left">
                       <div className="prospect-rank">{String(prospect.rank).padStart(2, '0')}</div>
-                      <div className="prospect-pos-badge" style={{ margin: '0 0.5rem' }}>
+                      <div className="prospect-pos-badge">
                         <span className={`pos-badge-minimal ${getPositionClass(prospect.position)}`}>
                           {prospect.position}
                         </span>
@@ -649,7 +665,7 @@ function App() {
                     </div>
                     
                     <div className="card-right">
-                      {currentTeamOnClock?.needs?.includes(prospect.position) && (
+                      {activeNeeds.includes(prospect.position) && (
                         <span className="team-need-badge">NEED</span>
                       )}
                       <button 
@@ -683,6 +699,46 @@ function App() {
           }} 
           onClose={() => setSelectedProfileId(null)} 
         />
+      )}
+
+      {showTradeModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '600px' }}>
+            <div className="modal-header-bar">
+              <span className="modal-brand">TRADE CENTER</span>
+              <button className="btn-icon" onClick={() => setShowTradeModal(false)}>✕</button>
+            </div>
+            <div className="profile-scroll-content" style={{ padding: '2rem' }}>
+              <h2 style={{ marginBottom: '1rem' }}>Registrar Troca</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Esta funcionalidade permite registrar trocas de picks entre times.
+              </p>
+              
+              <div className="glass-panel-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Time A</label>
+                  <select className="post-draft-select">
+                    <option>{currentTeamOnClock?.abbr}</option>
+                    {/* Mais times seriam listados aqui */}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Time B</label>
+                  <select className="post-draft-select">
+                    <option>Selecionar time...</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Picks Envolvidas</label>
+                  <input type="text" className="search-bar input" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '4px', color: 'white' }} placeholder="Ex: 32, 64" />
+                </div>
+                <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => setShowTradeModal(false)}>
+                  Confirmar Troca
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
