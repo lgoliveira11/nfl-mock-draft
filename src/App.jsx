@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import SetupPage from './components/SetupPage';
 import PlayerProfileModal from './components/PlayerProfileModal';
 import { getCpuPick } from './utils/draftEngine';
@@ -127,6 +127,14 @@ function App() {
       });
     }
   }, [currentPickIndex, activeTab]);
+  const displayedProspects = useMemo(() => {
+    const searchLower = searchQuery.toLowerCase();
+    return availableProspects.filter(p => {
+      const matchesPos = selectedPositions.length === 0 || selectedPositions.includes(p.position);
+      const matchesSearch = searchLower ? p.name.toLowerCase().includes(searchLower) : true;
+      return matchesPos && matchesSearch;
+    });
+  }, [availableProspects, selectedPositions, searchQuery]);
 
   if (!setupConfig) {
     return (
@@ -152,11 +160,7 @@ function App() {
     }
   };
   
-  const displayedProspects = availableProspects.filter(p => {
-    const matchesPos = selectedPositions.length === 0 || selectedPositions.includes(p.position);
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesPos && matchesSearch;
-  });
+
 
   const handleLogPositionToggle = (pos) => {
     setLogSelectedPositions(prev => 

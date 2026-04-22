@@ -51,10 +51,10 @@ export default function SetupPage({ onComplete }) {
     localStorage.setItem('nfl_mock_draft_setup', JSON.stringify(setupData));
   }, [bpaBoardId, cpuBoardId, draftSpeed, numRounds, userTeams, draftOrder]);
 
-  // Normalize board data (ensure 'grade' exists)
   const normalizeBoard = (data) => {
-    return data.map(p => ({
+    return data.map((p, index) => ({
       ...p,
+      id: p.id !== null && p.id !== undefined ? p.id : `new-${index}-${p.name.replace(/\\s+/g, '-')}`,
       grade: p.grade || p.pffGrade || 0,
     }));
   };
