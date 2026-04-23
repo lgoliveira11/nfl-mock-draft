@@ -77,8 +77,8 @@ export default function DraftTracker() {
   const [selectedTrade, setSelectedTrade] = useState(null);
 
   // ─── Load ─────────────────────────────────────────────────────────────────
-  const loadPicks = useCallback(async () => {
-    setLoading(true);
+  const loadPicks = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const { data, error } = await supabase
         .from('draft_picks')
@@ -128,7 +128,7 @@ export default function DraftTracker() {
     } catch (e) {
       console.error(e);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   }, []);
 
   useEffect(() => { 
@@ -153,8 +153,8 @@ export default function DraftTracker() {
         console.log('Broadcast de estado recebido:', payload);
         if (payload.picks) setPicks(payload.picks);
         if (payload.trades) setTrades(payload.trades);
-        // Opcional: recarregar do banco após um pequeno delay para garantir consistência final
-        setTimeout(loadPicks, 1000);
+        // Recarregar silenciosamente para garantir consistência
+        setTimeout(() => loadPicks(true), 1000);
       })
       .subscribe((status) => {
         console.log('Status do canal Realtime:', status);
