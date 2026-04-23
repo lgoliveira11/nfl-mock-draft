@@ -114,7 +114,8 @@ export default function DraftTracker() {
     try {
       const { data: tradeData, error: tradeError } = await supabase
         .from('draft_trades')
-        .select('*');
+        .select('*')
+        .setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       
       if (!tradeError && tradeData && tradeData.length > 0) {
         const formattedTrades = tradeData.map(t => ({
@@ -156,9 +157,12 @@ export default function DraftTracker() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_trades' }, () => {
         loadPicks();
       })
-      .on('broadcast', { event: 'sync_data' }, () => {
-        console.log('Broadcast recebido: sincronizando...');
-        loadPicks();
+      .on('broadcast', { event: 'sync_data' }, ({ payload }) => {
+        console.log('Broadcast de estado recebido:', payload);
+        if (payload.picks) setPicks(payload.picks);
+        if (payload.trades) setTrades(payload.trades);
+        // Opcional: recarregar do banco após um pequeno delay para garantir consistência final
+        setTimeout(loadPicks, 1000);
       })
       .subscribe((status) => {
         console.log('Status do canal Realtime:', status);
@@ -215,8 +219,9 @@ export default function DraftTracker() {
       // 2. Delete picks that are no longer in the state
       const currentPlayerIds = Object.keys(picks);
       if (currentPlayerIds.length > 0) {
-        // Formatar manualmente para o padrão PostgREST: (id1,id2,id3)
-        const idList = `(${currentPlayerIds.join(',')})`;
+        // Envolver cada ID em aspas duplas caso sejam strings, para evitar erro no PostgREST
+        const formattedIds = currentPlayerIds.map(id => `"${id}"`).join(',');
+        const idList = `(${formattedIds})`;
         const { error: delError } = await supabase
           .from('draft_picks')
           .delete()
@@ -250,12 +255,16 @@ export default function DraftTracker() {
         if (tradeErr) throw tradeErr;
       }
 
-      // ─── Enviar Broadcast para outros clientes ───
+      // ─── Enviar Broadcast de ESTADO para outros clientes ───
       if (channelRef.current) {
         await channelRef.current.send({
           type: 'broadcast',
           event: 'sync_data',
-          payload: { timestamp: new Date().getTime() },
+          payload: { 
+            picks: picks,
+            trades: trades,
+            timestamp: new Date().getTime() 
+          },
         });
       }
 
