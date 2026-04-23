@@ -51,6 +51,7 @@ export default function DraftTracker() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
+  const channelRef = useRef(null);
 
   // Filters (board view)
   const [posFilter, setPosFilter] = useState('ALL');
@@ -145,9 +146,8 @@ export default function DraftTracker() {
     if (slot && slot.round) setSelectedPicksRound(slot.round);
   }, [loadPicks]);
 
-  // ─── Realtime Subscription ────────────────────────────────────────────────
   useEffect(() => {
-    // Escutar mudanças em picks e trades
+    // Iniciar o canal e guardar na ref
     const channel = supabase
       .channel('draft_realtime_updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_picks' }, () => {
@@ -156,14 +156,20 @@ export default function DraftTracker() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_trades' }, () => {
         loadPicks();
       })
-      // Ouvir mensagens diretas de sincronização (Broadcast)
       .on('broadcast', { event: 'sync_data' }, () => {
+        console.log('Broadcast recebido: sincronizando...');
         loadPicks();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Status do canal Realtime:', status);
+      });
+
+    channelRef.current = channel;
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
   }, [loadPicks]);
 
@@ -209,11 +215,12 @@ export default function DraftTracker() {
       // 2. Delete picks that are no longer in the state
       const currentPlayerIds = Object.keys(picks);
       if (currentPlayerIds.length > 0) {
-        // Usar array diretamente para o filtro 'in' que é mais seguro no JS client
+        // Formatar manualmente para o padrão PostgREST: (id1,id2,id3)
+        const idList = `(${currentPlayerIds.join(',')})`;
         const { error: delError } = await supabase
           .from('draft_picks')
           .delete()
-          .not('player_id', 'in', currentPlayerIds); 
+          .not('player_id', 'in', idList); 
         if (delError) throw delError;
       } else {
         // If state is empty, clear the whole table
@@ -244,11 +251,13 @@ export default function DraftTracker() {
       }
 
       // ─── Enviar Broadcast para outros clientes ───
-      await supabase.channel('draft_realtime_updates').send({
-        type: 'broadcast',
-        event: 'sync_data',
-        payload: { message: 'Data updated by master' },
-      });
+      if (channelRef.current) {
+        await channelRef.current.send({
+          type: 'broadcast',
+          event: 'sync_data',
+          payload: { timestamp: new Date().getTime() },
+        });
+      }
 
       setLastSaved(new Date());
     } catch (err) {
