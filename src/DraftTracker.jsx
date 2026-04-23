@@ -486,7 +486,7 @@ export default function DraftTracker() {
 
         <div className="tracker-header-right">
           {/* Board selector */}
-          <div className="tracker-board-select">
+          <div className="tracker-board-select hide-on-mobile">
             <span className="tracker-label">Board:</span>
             {Object.entries(BOARDS).map(([key, b]) => (
               <button
@@ -517,23 +517,6 @@ export default function DraftTracker() {
 
           {/* Stats & actions */}
           <div className="tracker-actions">
-            {lastSaved && (
-              <span className="tracker-stat tracker-saved">
-                <i className="fas fa-cloud"></i>
-                {lastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-            <button className="btn-icon-tracker" onClick={loadPicks} title="Atualizar">
-              <i className={`fas fa-rotate-right ${loading ? 'fa-spin' : ''}`}></i>
-            </button>
-            {isMaster && (
-              <button className="btn-save-tracker" onClick={handleSaveToCloud} disabled={saving}>
-                {saving
-                  ? <><i className="fas fa-spinner fa-spin"></i> Salvando...</>
-                  : <><i className="fas fa-cloud-arrow-up"></i> Salvar</>
-                }
-              </button>
-            )}
             {!isMaster ? (
               <button className="btn-login-tracker" onClick={() => setShowLogin(true)}>
                 <i className="fas fa-lock"></i> Master
@@ -563,24 +546,22 @@ export default function DraftTracker() {
           {/* On The Clock banner - Visible in both views */}
           {!isDraftComplete && nextExpectedTeam && (
             <div className="tracker-otc-banner">
-              <div className="otc-left">
-                <span className="otc-label">ON THE CLOCK</span>
-                <img src={nextExpectedTeam.logo} alt={nextExpectedTeam.abbr} className="otc-logo" />
-                <span className="otc-team-name">{nextExpectedTeam.abbr}</span>
-                <span className="otc-team-full hide-on-mobile">{nextExpectedTeam.team}</span>
+              <div className="otc-top-row">
+                <span className="otc-status">ON THE CLOCK</span>
+                {nextSlot && <span className="otc-round-label">Round {nextSlot.round}</span>}
               </div>
-              <div className="otc-right">
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  {isMaster && (
-                    <button className="btn-trade-register" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={openTradeModal}>
-                      <i className="fas fa-arrows-rotate"></i> TROCA
-                    </button>
-                  )}
-                  <div style={{ textAlign: 'right' }}>
-                    <span className="otc-pick-label">Escolha</span>
-                    <div className="otc-pick-num">#{String(nextPickNumber).padStart(2, '0')}</div>
-                    {nextSlot && <span className="otc-round">Round {nextSlot.round}</span>}
-                  </div>
+              <div className="otc-main-row">
+                <div className="otc-team-info">
+                  <img src={nextExpectedTeam.logo} alt={nextExpectedTeam.abbr} className="otc-logo-v2" />
+                  <span className="otc-team-abbr-v2">{nextExpectedTeam.abbr}</span>
+                </div>
+                {isMaster && (
+                  <button className="btn-otc-trade" onClick={openTradeModal}>
+                    <i className="fas fa-arrows-rotate"></i> TROCA
+                  </button>
+                )}
+                <div className="otc-pick-number-v2">
+                  #{String(nextPickNumber).padStart(2, '0')}
                 </div>
               </div>
             </div>
@@ -1117,6 +1098,20 @@ export default function DraftTracker() {
             </div>
           </div>
         </div>
+      )}
+      {isMaster && (
+        <button 
+          className="btn-save-floating" 
+          onClick={handleSaveToCloud} 
+          disabled={saving}
+          title="Salvar alterações na nuvem"
+        >
+          {saving ? (
+            <><i className="fas fa-spinner fa-spin"></i> SALVANDO...</>
+          ) : (
+            <><i className="fas fa-cloud-arrow-up"></i> SALVAR ALTERAÇÕES</>
+          )}
+        </button>
       )}
     </div>
   );

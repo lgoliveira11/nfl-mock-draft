@@ -1798,6 +1798,57 @@ h1, h2, h3, h4, h5, h6 {
   color: transparent;
 }
 
+/* Floating Save Button para Modo Master */
+.btn-save-floating {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 2000;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 25px var(--accent-glow);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUpFade 0.5s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+.btn-save-floating:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 35px var(--accent-glow);
+  filter: brightness(1.1);
+}
+
+.btn-save-floating:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .btn-save-floating {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    padding: 0.7rem 1.3rem;
+    font-size: 0.8rem;
+  }
+}
+
 .tracker-subtitle {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -2772,109 +2823,115 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ── Tracker: On The Clock Banner ── */
+/* ── Tracker: On The Clock Banner ── */
 .tracker-otc-banner {
+  background: var(--bg-primary);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.otc-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.otc-status {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #5da0ff;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
+
+.otc-round-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.otc-main-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08));
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.08);
-  animation: otcPulse 2.5s ease-in-out infinite;
 }
 
-@keyframes otcPulse {
-  0%, 100% { border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.08); }
-  50%       { border-color: rgba(59, 130, 246, 0.55); box-shadow: 0 0 28px rgba(59, 130, 246, 0.18); }
+.otc-team-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.otc-logo-v2 {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.15));
+}
+
+.otc-team-abbr-v2 {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.btn-otc-trade {
+  background: transparent;
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+  padding: 0.4rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-otc-trade:hover {
+  background: rgba(245, 158, 11, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+}
+
+.otc-pick-number-v2 {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #93c5fd;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.04em;
 }
 
 .otc-complete {
-  animation: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.06));
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: none;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   color: #10b981;
   font-weight: 700;
   font-size: 0.9rem;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.otc-left {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.otc-label {
-  font-size: 0.65rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: #93c5fd;
-  text-transform: uppercase;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 4px;
-  padding: 0.15rem 0.5rem;
-  white-space: nowrap;
-}
-
-.otc-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)) brightness(1.1);
-}
-
-.otc-team-name {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--text-primary);
-}
-
-.otc-team-full {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.otc-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
-}
-
-.otc-pick-label {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.otc-pick-num {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: #93c5fd;
-  line-height: 1;
-}
-
-.otc-round {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  font-weight: 600;
+  padding: 1.2rem;
+  border-radius: 12px;
 }
 
 @media (max-width: 768px) {
-  .otc-team-full { display: none; }
-  .otc-logo { width: 28px; height: 28px; }
-  .otc-team-name { font-size: 1rem; }
-  .otc-pick-num { font-size: 1.1rem; }
+  .otc-team-abbr-v2 { font-size: 1.2rem; }
+  .otc-pick-number-v2 { font-size: 1.3rem; }
+  .btn-otc-trade { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
   
   /* Ajustes para a linha do Board no Mobile */
   .tracker-board-row {
