@@ -2191,13 +2191,304 @@ h1, h2, h3, h4, h5, h6 {
 .tracker-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-  padding: 1rem;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ── Pick Modal V2 ── */
+.tracker-modal-v2 {
+  background: #0f1115;
+  width: 95%;
+  max-width: 850px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  padding: 1.5rem;
+  animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 95vh;
+  overflow-y: auto;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header-v2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-rank {
+  font-family: 'Outfit';
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #4b5563;
+}
+
+.modal-name {
+  font-family: 'Outfit';
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+}
+
+.modal-pos-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+
+.modal-close-btn-v2 {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.modal-close-btn-v2:hover {
+  opacity: 1;
+}
+
+.modal-body-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-controls-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.modal-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+.selected-team-box {
+  background: #161a1f;
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  padding: 0 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 64px;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+.large-team-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.large-team-name {
+  font-family: 'Outfit';
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: white;
+  letter-spacing: 0.02em;
+}
+
+.pick-num-box {
+  background: #161a1f;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 90px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s;
+}
+
+.pick-num-box:focus-within {
+  border-color: #3b82f6;
+}
+
+.modal-pick-input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-align: center;
+  width: 100%;
+  outline: none;
+  font-family: 'Outfit', sans-serif;
+}
+
+.btn-confirm-pick-v2 {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border: none;
+  color: white;
+  padding: 0 1.8rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-confirm-pick-v2:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-confirm-pick-v2:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.modal-team-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
+.modal-team-card {
+  background: #1a1e26;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 0.6rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-team-card:hover {
+  background: #232832;
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.modal-team-card.selected {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+.modal-card-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.modal-card-abbr {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.modal-team-card.selected .modal-card-abbr {
+  color: #93c5fd;
+}
+
+.large-team-abbr-v2 {
+  display: none;
+  font-family: 'Outfit';
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .tracker-modal-v2 {
+    padding: 1rem;
+    width: 98%;
+    border-radius: 12px;
+  }
+  .modal-header-v2 {
+    margin-bottom: 1.25rem;
+  }
+  .modal-name { font-size: 1.3rem; }
+  .modal-rank { font-size: 1.2rem; }
+
+  .modal-controls-row {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .team-selection-large { flex: 2 !important; }
+  .pick-selection-small { flex: 1; }
+
+  .selected-team-box {
+    width: 100%;
+    height: 56px;
+    padding: 0 0.75rem;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+  .large-team-logo { width: 28px; height: 28px; }
+  .show-on-mobile { display: block !important; }
+  
+  .pick-num-box {
+    width: 100%;
+    height: 56px;
+  }
+  .modal-pick-input { font-size: 1.4rem; }
+
+  .btn-confirm-pick-v2 {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.2rem;
+  }
+
+  .modal-team-grid-v2 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+    max-height: 320px;
+  }
+  .modal-team-card { padding: 0.5rem 0.3rem; }
+  .modal-card-logo { width: 22px; height: 22px; }
 }
 
 .tracker-modal {

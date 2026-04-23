@@ -868,84 +868,80 @@ export default function DraftTracker() {
         </div>
       )}
 
-      {/* ── Pick Registration Modal ── */}
       {modalPlayer && (
         <div className="tracker-modal-overlay" onClick={closeModal}>
-          <div className="tracker-modal tracker-modal-wide" onClick={e => e.stopPropagation()}>
-            <div className="tracker-modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span
-                  className="tpr-pos-badge"
-                  style={{
-                    background: `${posColor(modalPlayer.position)}22`,
-                    color: posColor(modalPlayer.position),
-                    borderColor: `${posColor(modalPlayer.position)}55`,
-                    fontSize: '0.75rem',
+          <div className="tracker-modal-v2" onClick={e => e.stopPropagation()}>
+            <div className="modal-header-v2">
+              <div className="modal-title-wrap">
+                <span className="modal-rank">{String(modalPlayer.rank).padStart(2, '0')}</span>
+                <h2 className="modal-name">{modalPlayer.name}</h2>
+                <span 
+                  className="modal-pos-badge" 
+                  style={{ 
+                    color: posColor(modalPlayer.position), 
+                    borderColor: `${posColor(modalPlayer.position)}44`,
+                    backgroundColor: `${posColor(modalPlayer.position)}11`
                   }}
                 >
                   {modalPlayer.position}
                 </span>
-                <h2 style={{ margin: 0 }}>
-                  #{modalPlayer.rank} {modalPlayer.name}
-                </h2>
               </div>
-              <button className="modal-close-btn" onClick={closeModal}>
+              <button className="modal-close-btn-v2" onClick={closeModal}>
                 <i className="fas fa-xmark"></i>
               </button>
             </div>
 
-            <div className="tracker-modal-body">
-              {/* Pick number */}
-              <label className="tracker-field-label">Número da Escolha</label>
-              <input
-                ref={pickNumRef}
-                type="number"
-                min="1"
-                max="259"
-                className="tracker-input"
-                placeholder="Ex: 14"
-                value={modalPickNum}
-                onChange={e => setModalPickNum(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && confirmPick()}
-              />
+            <div className="modal-body-v2">
+              <div className="modal-controls-row">
+                <div className="modal-control-item team-selection-large" style={{ flex: 1 }}>
+                  <label className="modal-label">TIME</label>
+                  <div className="selected-team-box">
+                    {modalTeam ? (
+                      <>
+                        <img src={modalTeam.logo} alt={modalTeam.abbr} className="large-team-logo" />
+                        <span className="large-team-name hide-on-mobile">{modalTeam.team.toUpperCase()}</span>
+                        <span className="large-team-abbr-v2 show-on-mobile">{modalTeam.abbr}</span>
+                      </>
+                    ) : (
+                      <span className="placeholder-text" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Selecione um time abaixo...</span>
+                    )}
+                  </div>
+                </div>
 
-              {/* Team selector */}
-              <label className="tracker-field-label" style={{ marginTop: '1rem' }}>Time</label>
-              <input
-                className="tracker-input"
-                placeholder="Buscar time..."
-                value={modalTeamSearch}
-                onChange={e => setModalTeamSearch(e.target.value)}
-                style={{ marginBottom: '0.5rem' }}
-              />
+                <div className="modal-control-item pick-selection-small">
+                  <label className="modal-label">ESCOLHA</label>
+                  <div className="pick-num-box">
+                    <input 
+                      ref={pickNumRef}
+                      type="number" 
+                      className="modal-pick-input"
+                      value={modalPickNum}
+                      onChange={e => setModalPickNum(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && confirmPick()}
+                    />
+                  </div>
+                </div>
 
-              <div className="tracker-team-grid">
-                {filteredTeams.map(t => (
+                <div className="modal-control-item">
+                  <label className="modal-label" style={{ opacity: 0 }}>.</label>
+                  <button className="btn-confirm-pick-v2" onClick={confirmPick} disabled={!modalTeam || !modalPickNum}>
+                    <i className="fas fa-check"></i> <span className="hide-on-mobile">Confirmar Pick</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="modal-team-grid-v2">
+                {ALL_TEAMS.map(t => (
                   <button
                     key={t.abbr}
-                    className={`tracker-team-option ${modalTeam?.abbr === t.abbr ? 'selected' : ''}`}
+                    className={`modal-team-card ${modalTeam?.abbr === t.abbr ? 'selected' : ''}`}
                     onClick={() => setModalTeam(t)}
                   >
-                    <img src={t.logo} alt={t.abbr} className="tto-logo" />
-                    <span className="tto-abbr">{t.abbr}</span>
+                    <img src={t.logo} alt={t.abbr} className="modal-card-logo" />
+                    <span className="modal-card-abbr">{t.abbr}</span>
                   </button>
                 ))}
               </div>
-
-              {/* Confirm */}
-              <button
-                className="btn-save-tracker"
-                style={{
-                  width: '100%',
-                  marginTop: '1rem',
-                  justifyContent: 'center',
-                  opacity: (!modalTeam || !modalPickNum) ? 0.5 : 1,
-                }}
-                onClick={confirmPick}
-                disabled={!modalTeam || !modalPickNum}
-              >
-                <i className="fas fa-check"></i> Confirmar Pick
-              </button>
             </div>
           </div>
         </div>
@@ -1099,7 +1095,7 @@ export default function DraftTracker() {
           </div>
         </div>
       )}
-      {isMaster && (
+      {isMaster && !modalPlayer && (
         <button 
           className="btn-save-floating" 
           onClick={handleSaveToCloud} 
