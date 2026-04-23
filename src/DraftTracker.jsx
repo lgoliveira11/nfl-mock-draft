@@ -519,67 +519,87 @@ export default function DraftTracker() {
 
       {/* ── Content ── */}
       <div className="tracker-content">
-        {/* On The Clock banner - Visible in both views */}
-        {!isDraftComplete && nextExpectedTeam && (
-          <div className="tracker-otc-banner">
-            <div className="otc-left">
-              <span className="otc-label">ON THE CLOCK</span>
-              <img src={nextExpectedTeam.logo} alt={nextExpectedTeam.abbr} className="otc-logo" />
-              <span className="otc-team-name">{nextExpectedTeam.abbr}</span>
-              <span className="otc-team-full hide-on-mobile">{nextExpectedTeam.team}</span>
-            </div>
-            <div className="otc-right">
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                <button className="btn-trade-register" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={openTradeModal}>
-                  <i className="fas fa-arrows-rotate"></i> TROCA
-                </button>
-                <div style={{ textAlign: 'right' }}>
-                  <span className="otc-pick-label">Escolha</span>
-                  <div className="otc-pick-num">#{String(nextPickNumber).padStart(2, '0')}</div>
-                  {nextSlot && <span className="otc-round">Round {nextSlot.round}</span>}
+        
+        {/* Header Sticky: Banner + Filtros */}
+        <div className="tracker-header-sticky">
+          {/* On The Clock banner - Visible in both views */}
+          {!isDraftComplete && nextExpectedTeam && (
+            <div className="tracker-otc-banner">
+              <div className="otc-left">
+                <span className="otc-label">ON THE CLOCK</span>
+                <img src={nextExpectedTeam.logo} alt={nextExpectedTeam.abbr} className="otc-logo" />
+                <span className="otc-team-name">{nextExpectedTeam.abbr}</span>
+                <span className="otc-team-full hide-on-mobile">{nextExpectedTeam.team}</span>
+              </div>
+              <div className="otc-right">
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <button className="btn-trade-register" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={openTradeModal}>
+                    <i className="fas fa-arrows-rotate"></i> TROCA
+                  </button>
+                  <div style={{ textAlign: 'right' }}>
+                    <span className="otc-pick-label">Escolha</span>
+                    <div className="otc-pick-num">#{String(nextPickNumber).padStart(2, '0')}</div>
+                    {nextSlot && <span className="otc-round">Round {nextSlot.round}</span>}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        {isDraftComplete && (
-          <div className="tracker-otc-banner otc-complete">
-            <i className="fas fa-trophy"></i> Draft Concluído! {totalDrafted} jogadores selecionados.
-          </div>
-        )}
+          )}
+          {isDraftComplete && (
+            <div className="tracker-otc-banner otc-complete">
+              <i className="fas fa-trophy"></i> Draft Concluído! {totalDrafted} jogadores selecionados.
+            </div>
+          )}
+
+          {view === 'board' ? (
+            <div className="tracker-filters">
+              <div className="tracker-search-wrap">
+                <i className="fas fa-search tracker-search-icon"></i>
+                <input
+                  className="tracker-search-input"
+                  placeholder="Buscar jogador..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  autoComplete="off"
+                  name="draftPlayerSearch"
+                  spellCheck="false"
+                />
+              </div>
+              <div className="tracker-pos-filters">
+                {['ALL', 'UNDRAFTED', 'DRAFTED', ...ALL_POSITIONS].map(f => (
+                  <button
+                    key={f}
+                    className={`pill-btn ${posFilter === f ? 'active' : ''}`}
+                    onClick={() => setPosFilter(f)}
+                    style={f.length <= 4 && f !== 'ALL' && f !== 'DRAFTED' && f !== 'UNDRAFTED'
+                      ? { color: posColor(f), borderColor: `${posColor(f)}44` }
+                      : {}
+                    }
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="round-selector-sticky">
+              <div className="round-selector" style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.4rem' }}>
+                {[1, 2, 3, 4, 5, 6, 7].map(round => (
+                  <button 
+                    key={round}
+                    className={`pill-btn ${selectedPicksRound === round ? 'active' : ''}`}
+                    onClick={() => setSelectedPicksRound(round)}
+                  >
+                    ROUND {round}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {view === 'board' ? (
-          <>
-            {/* Filters */}
-          <div className="tracker-filters">
-            <div className="tracker-search-wrap">
-              <i className="fas fa-search tracker-search-icon"></i>
-              <input
-                className="tracker-search-input"
-                placeholder="Buscar jogador..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                autoComplete="off"
-                name="draftPlayerSearch"
-                spellCheck="false"
-              />
-            </div>
-            <div className="tracker-pos-filters">
-              {['ALL', 'UNDRAFTED', 'DRAFTED', ...ALL_POSITIONS].map(f => (
-                <button
-                  key={f}
-                  className={`pill-btn ${posFilter === f ? 'active' : ''}`}
-                  onClick={() => setPosFilter(f)}
-                  style={f.length <= 4 && f !== 'ALL' && f !== 'DRAFTED' && f !== 'UNDRAFTED'
-                    ? { color: posColor(f), borderColor: `${posColor(f)}44` }
-                    : {}
-                  }
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="tracker-board-list-container">
 
           {/* Board list */}
           {loading ? (
@@ -680,21 +700,10 @@ export default function DraftTracker() {
               )}
             </div>
           )}
-            </>
-          ) : (
+        </div>
+      ) : (
             /* ── Picks View ── */
-            <>
-            <div className="round-selector" style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.4rem' }}>
-              {[1, 2, 3, 4, 5, 6, 7].map(round => (
-                <button 
-                  key={round}
-                  className={`pill-btn ${selectedPicksRound === round ? 'active' : ''}`}
-                  onClick={() => setSelectedPicksRound(round)}
-                >
-                  ROUND {round}
-                </button>
-              ))}
-            </div>
+            <div className="tracker-board-list-container">
 
             {/* Trades list removed from here as per user request to clean up UI */}
 
@@ -795,9 +804,9 @@ export default function DraftTracker() {
                   );
                 })}
             </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Login Modal ── */}
       {showLogin && (

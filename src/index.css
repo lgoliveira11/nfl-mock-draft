@@ -2333,11 +2333,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ── Tracker: Filters ── */
+.tracker-header-sticky {
+  position: sticky;
+  top: -1px;
+  z-index: 100;
+  background-color: var(--bg-primary);
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .tracker-filters {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1rem;
 }
 
 .tracker-search-wrap {
