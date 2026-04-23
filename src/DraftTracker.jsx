@@ -181,6 +181,7 @@ export default function DraftTracker() {
     if (!isMaster) return;
     setSaving(true);
     try {
+      // ─── Save Picks ───
       const rows = Object.entries(picks).map(([playerId, p]) => ({
         player_id: playerId,
         player_name: p.playerName,
@@ -193,11 +194,30 @@ export default function DraftTracker() {
         board_source: p.boardSource || selectedBoard,
       }));
 
+      // 1. Upsert (Insert/Update) current picks
       if (rows.length > 0) {
         const { error } = await supabase
           .from('draft_picks')
           .upsert(rows, { onConflict: 'player_id' });
         if (error) throw error;
+      }
+
+      // 2. Delete picks that are no longer in the state
+      const currentPlayerIds = Object.keys(picks);
+      if (currentPlayerIds.length > 0) {
+        // Remove players from DB that are not in our current state
+        const { error: delError } = await supabase
+          .from('draft_picks')
+          .delete()
+          .not('player_id', 'in', `(${currentPlayerIds.join(',')})`);
+        if (delError) throw delError;
+      } else {
+        // If state is empty, clear the whole table
+        const { error: delAllError } = await supabase
+          .from('draft_picks')
+          .delete()
+          .neq('player_id', '0'); 
+        if (delAllError) throw delAllError;
       }
 
       // ─── Save Trades ───
