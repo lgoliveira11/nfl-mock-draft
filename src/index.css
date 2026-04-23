@@ -2450,10 +2450,11 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   font-weight: 600;
-  font-size: 1rem;
-  min-width: 0;
+  font-size: 0.95rem;
+  min-width: 80px; /* Garante que o nome tenha um espaço mínimo */
+  overflow: hidden;
 }
 
 .tbr-name span {
@@ -2476,7 +2477,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tbr-action {
-  width: 70px;
+  width: 44px; /* Tamanho suficiente para um botão no mobile */
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
@@ -2872,6 +2873,25 @@ h1, h2, h3, h4, h5, h6 {
   .otc-logo { width: 28px; height: 28px; }
   .otc-team-name { font-size: 1rem; }
   .otc-pick-num { font-size: 1.1rem; }
+  
+  /* Ajustes para a linha do Board no Mobile */
+  .tracker-board-row {
+    padding: 0.6rem 0.75rem;
+    gap: 0.4rem;
+  }
+  .tbr-rank { width: 25px; font-size: 0.85rem; }
+  .tbr-pos { width: 45px; }
+  .tbr-pick-info { width: 80px; gap: 0.3rem; }
+  .tbr-grade-col { width: 35px; }
+  .tbr-action { width: 40px; }
+  
+  .tbr-name { 
+    font-size: 0.85rem; 
+    min-width: 50px; 
+    gap: 0.3rem;
+  }
+  .tbr-team-logo { width: 22px; height: 22px; }
+  .tbr-team-abbr { font-size: 0.85rem; }
 }
 
 /* ── Home Page ── */
