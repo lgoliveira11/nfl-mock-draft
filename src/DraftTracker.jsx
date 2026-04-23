@@ -83,10 +83,11 @@ export default function DraftTracker() {
       const { data, error } = await supabase
         .from('draft_picks')
         .select('*')
+        .setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         .order('pick_number', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        const map = {};
+      const map = {};
+      if (!error && data) {
         data.forEach(row => {
           map[row.player_id] = {
             playerName: row.player_name,
@@ -99,16 +100,11 @@ export default function DraftTracker() {
             boardSource: row.board_source,
           };
         });
-        setPicks(map);
-        localStorage.setItem('dt_picks_v2', JSON.stringify(map));
-        setLastSaved(new Date());
-      } else {
-        const local = localStorage.getItem('dt_picks_v2');
-        if (local) setPicks(JSON.parse(local));
       }
-    } catch {
-      const local = localStorage.getItem('dt_picks_v2');
-      if (local) setPicks(JSON.parse(local));
+      setPicks(map);
+      if (!error) setLastSaved(new Date());
+    } catch (e) {
+      console.error(e);
     }
     // Load trades
     try {
@@ -117,24 +113,20 @@ export default function DraftTracker() {
         .select('*')
         .setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       
-      if (!tradeError && tradeData && tradeData.length > 0) {
-        const formattedTrades = tradeData.map(t => ({
+      let formattedTrades = [];
+      if (!tradeError && tradeData) {
+        formattedTrades = tradeData.map(t => ({
           id: t.id,
-          teamA: t.team_a,
-          teamB: t.team_b,
+          teamA: ALL_TEAMS.find(at => at.abbr === t.team_a) || { abbr: t.team_a },
+          teamB: ALL_TEAMS.find(at => at.abbr === t.team_b) || { abbr: t.team_b },
           picksAtoB: t.picks_a_to_b || [],
           picksBtoA: t.picks_b_to_a || [],
           note: t.note
         }));
-        setTrades(formattedTrades);
-        localStorage.setItem('dt_trades_v2', JSON.stringify(formattedTrades));
-      } else {
-        const localTrades = localStorage.getItem('dt_trades_v2');
-        if (localTrades) setTrades(JSON.parse(localTrades));
       }
-    } catch {
-      const localTrades = localStorage.getItem('dt_trades_v2');
-      if (localTrades) setTrades(JSON.parse(localTrades));
+      setTrades(formattedTrades);
+    } catch (e) {
+      console.error(e);
     }
     setLoading(false);
   }, []);
@@ -634,7 +626,6 @@ export default function DraftTracker() {
                   <div
                     key={player.id}
                     className={`tracker-board-row ${isDrafted ? 'is-drafted' : 'is-available'}`}
-                    onClick={() => openModal(player)}
                   >
                     {/* Rank */}
                     <div className="tbr-rank">
