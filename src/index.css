@@ -1573,16 +1573,17 @@ h1, h2, h3, h4, h5, h6 {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.team-info {
+.tracker-team-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.team-info img {
-  width: 24px;
-  height: 24px;
+.tracker-team-item img {
+  width: 32px;
+  height: 32px;
   object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
 }
 
 .needs-display {
@@ -2431,6 +2432,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 30px;
   height: 30px;
   object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2)) brightness(1.1);
 }
 
 .tbr-team-abbr {
@@ -2823,7 +2825,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 36px;
   height: 36px;
   object-fit: contain;
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)) brightness(1.1);
 }
 
 .otc-team-name {
@@ -2880,8 +2882,8 @@ h1, h2, h3, h4, h5, h6 {
     gap: 0.4rem;
   }
   .tbr-rank { width: 25px; font-size: 0.85rem; }
-  .tbr-pos { width: 45px; }
-  .tbr-pick-info { width: 80px; gap: 0.3rem; }
+  .tbr-pos { display: none; }
+  .tbr-pick-info { width: 35px; justify-content: center; }
   .tbr-grade-col { width: 35px; }
   .tbr-action { width: 40px; }
   
@@ -2892,6 +2894,22 @@ h1, h2, h3, h4, h5, h6 {
   }
   .tbr-team-logo { width: 22px; height: 22px; }
   .tbr-team-abbr { font-size: 0.85rem; }
+
+  /* Simplificação para selecionados no mobile */
+  .is-drafted .tbr-team-abbr,
+  .is-drafted .tbr-pos,
+  .is-drafted .tbr-pick-num {
+    display: none;
+  }
+  
+  /* Garantir alinhamento da grade ocultando o texto 'Disponível' */
+  .tbr-undrafted .tbr-available {
+    display: none;
+  }
+  .tbr-pick-info {
+    width: 35px; /* Espaço apenas para o logo */
+    justify-content: center;
+  }
 }
 
 /* ── Home Page ── */

@@ -571,9 +571,11 @@ export default function DraftTracker() {
               </div>
               <div className="otc-right">
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  <button className="btn-trade-register" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={openTradeModal}>
-                    <i className="fas fa-arrows-rotate"></i> TROCA
-                  </button>
+                  {isMaster && (
+                    <button className="btn-trade-register" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={openTradeModal}>
+                      <i className="fas fa-arrows-rotate"></i> TROCA
+                    </button>
+                  )}
                   <div style={{ textAlign: 'right' }}>
                     <span className="otc-pick-label">Escolha</span>
                     <div className="otc-pick-num">#{String(nextPickNumber).padStart(2, '0')}</div>
@@ -833,7 +835,7 @@ export default function DraftTracker() {
                               <button 
                                 className="tpr-btn tpr-btn-add" 
                                 onClick={() => {
-                                  setPickInput(String(pickNumber));
+                                  setModalPickNum(String(pickNumber));
                                   setView('board');
                                   setTimeout(() => document.querySelector('.tracker-search-input')?.focus(), 100);
                                 }} 
