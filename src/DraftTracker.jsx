@@ -156,6 +156,10 @@ export default function DraftTracker() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_trades' }, () => {
         loadPicks();
       })
+      // Ouvir mensagens diretas de sincronização (Broadcast)
+      .on('broadcast', { event: 'sync_data' }, () => {
+        loadPicks();
+      })
       .subscribe();
 
     return () => {
@@ -205,11 +209,11 @@ export default function DraftTracker() {
       // 2. Delete picks that are no longer in the state
       const currentPlayerIds = Object.keys(picks);
       if (currentPlayerIds.length > 0) {
-        // Remove players from DB that are not in our current state
+        // Usar array diretamente para o filtro 'in' que é mais seguro no JS client
         const { error: delError } = await supabase
           .from('draft_picks')
           .delete()
-          .not('player_id', 'in', `(${currentPlayerIds.join(',')})`);
+          .not('player_id', 'in', currentPlayerIds); 
         if (delError) throw delError;
       } else {
         // If state is empty, clear the whole table
@@ -238,6 +242,13 @@ export default function DraftTracker() {
           .insert(tradeRows);
         if (tradeErr) throw tradeErr;
       }
+
+      // ─── Enviar Broadcast para outros clientes ───
+      await supabase.channel('draft_realtime_updates').send({
+        type: 'broadcast',
+        event: 'sync_data',
+        payload: { message: 'Data updated by master' },
+      });
 
       setLastSaved(new Date());
     } catch (err) {
