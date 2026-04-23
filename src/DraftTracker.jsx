@@ -681,17 +681,7 @@ export default function DraftTracker() {
                     <div 
                       key={pickNumber} 
                       className={`tracker-board-row ${pickData ? 'is-drafted' : isOnTheClock ? 'current-pick-highlight' : 'is-available'} ${isTradedPick ? 'is-traded-pick' : ''}`}
-                      onClick={() => {
-                        if (!pickData) {
-                          // Se clicar em uma pick vazia, muda para a visão de board 
-                          // e já deixa o número da pick pré-configurado
-                          setPickInput(String(pickNumber));
-                          setView('board');
-                          // Opcional: focar no campo de busca
-                          document.querySelector('.tracker-search-input')?.focus();
-                        }
-                      }}
-                      style={{ cursor: pickData ? 'default' : 'pointer' }}
+                      style={{ cursor: 'default' }}
                     >
                       <div className="tbr-rank" style={{ color: 'var(--text-primary)' }}>#{String(pickNumber).padStart(2,'0')}</div>
                       
@@ -741,18 +731,33 @@ export default function DraftTracker() {
                       
                       <div className="tbr-grade" style={{ fontSize: '0.72rem', opacity: 0.6 }}>R{slot.round}</div>
                       <div className="tbr-action">
-                        {isMaster && pickData && (
-                          <button 
-                            className="tpr-btn tpr-btn-clear" 
-                            onClick={e => {
-                              // Encontrar o ID do jogador que ocupa esta pick
-                              const playerId = Object.keys(picks).find(id => picks[id].pickNumber === pickNumber);
-                              if (playerId) clearPick(playerId, e);
-                            }} 
-                            title="Remover"
-                          >
-                            <i className="fas fa-xmark"></i>
-                          </button>
+                        {isMaster && (
+                          <>
+                            {pickData ? (
+                              <button 
+                                className="tpr-btn tpr-btn-clear" 
+                                onClick={e => {
+                                  const playerId = Object.keys(picks).find(id => picks[id].pickNumber === pickNumber);
+                                  if (playerId) clearPick(playerId, e);
+                                }} 
+                                title="Remover"
+                              >
+                                <i className="fas fa-xmark"></i>
+                              </button>
+                            ) : (
+                              <button 
+                                className="tpr-btn tpr-btn-add" 
+                                onClick={() => {
+                                  setPickInput(String(pickNumber));
+                                  setView('board');
+                                  setTimeout(() => document.querySelector('.tracker-search-input')?.focus(), 100);
+                                }} 
+                                title="Registrar pick"
+                              >
+                                <i className="fas fa-plus"></i>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
