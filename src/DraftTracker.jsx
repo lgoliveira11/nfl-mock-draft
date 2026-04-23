@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 import { draftOrder as rawDraftOrder } from './data/mockData';
 import bigBoard from './data/bigboard.json';
@@ -8,7 +8,7 @@ import pffBoard from './data/pff_board.json';
 const MASTER_PASSWORD = 'DraFt#2026!AdmIn_TrAckEr_X9';
 
 const BOARDS = {
-  consensus: { label: 'Consensus', data: bigBoard },
+  otc: { label: 'OTC', data: bigBoard },
   pff: { label: 'PFF', data: pffBoard },
 };
 
@@ -19,6 +19,31 @@ const ALL_TEAMS = Object.values(
     return acc;
   }, {})
 ).sort((a, b) => a.abbr.localeCompare(b.abbr));
+
+// Função para completar um board com jogadores da PFF que estão faltando
+function getAugmentedBoard(targetBoard, pffData) {
+  if (targetBoard === pffData) return targetBoard;
+  
+  const targetIds = new Set(targetBoard.map(p => String(p.id)));
+  const missingFromPff = pffData.filter(p => !targetIds.has(String(p.id)));
+  
+  // Ordenar os faltantes pelo rank original da PFF
+  const sortedMissing = [...missingFromPff].sort((a, b) => (a.rank || 999) - (b.rank || 999));
+  
+  // Adicionar ao final do board alvo com novos ranks sequenciais
+  const augmented = [...targetBoard];
+  let nextRank = augmented.length > 0 ? Math.max(...augmented.map(p => p.rank || 0)) + 1 : 1;
+  
+  sortedMissing.forEach(p => {
+    augmented.push({
+      ...p,
+      rank: nextRank++,
+      isAugmented: true // Marcador opcional para debug/UI
+    });
+  });
+  
+  return augmented;
+}
 
 const POSITION_COLORS = {
   QB: '#ef4444', RB: '#f97316', WR: '#eab308', TE: '#84cc16',
@@ -39,7 +64,7 @@ export default function DraftTracker() {
   const [view, setView] = useState('board'); // 'board' | 'picks'
 
   // Board
-  const [selectedBoard, setSelectedBoard] = useState('consensus');
+  const [selectedBoard, setSelectedBoard] = useState('otc');
 
   // picks: { [playerId]: { playerName, position, pickNumber, round, teamAbbr, teamName, teamLogo } }
   const [picks, setPicks] = useState({});
@@ -356,14 +381,12 @@ export default function DraftTracker() {
     };
     const updated = [...trades, newTrade];
     setTrades(updated);
-    localStorage.setItem('dt_trades_v2', JSON.stringify(updated));
     setShowTradeModal(false);
   }
 
   function deleteTrade(id) {
     const updated = trades.filter(t => t.id !== id);
     setTrades(updated);
-    localStorage.setItem('dt_trades_v2', JSON.stringify(updated));
   }
 
   // Compute effective team for a pick slot after all trades
@@ -397,7 +420,12 @@ export default function DraftTracker() {
   }
 
   // ─── Derived data ──────────────────────────────────────────────────────────
-  const boardData = BOARDS[selectedBoard].data;
+  // Computed Board Data (Augmented with PFF if not already PFF)
+  const boardData = useMemo(() => {
+    const baseBoard = BOARDS[selectedBoard]?.data || [];
+    if (selectedBoard === 'pff') return baseBoard;
+    return getAugmentedBoard(baseBoard, BOARDS.pff.data);
+  }, [selectedBoard]);
   const totalDrafted = Object.keys(picks).length;
 
   // Next pick tracking
@@ -659,8 +687,16 @@ export default function DraftTracker() {
                           <i className="fas fa-arrows-rotate"></i> via troca
                         </span>
                       )}
-                      {player.grade && (
-                        <span className="tbr-grade">{Number(player.grade).toFixed(1)}</span>
+                    </div>
+
+                    {/* Grade Column */}
+                    <div className="tbr-grade-col">
+                      {player.isAugmented ? (
+                        <span className="tbr-grade">-</span>
+                      ) : (
+                        player.grade && (
+                          <span className="tbr-grade">{Number(player.grade).toFixed(1)}</span>
+                        )
                       )}
                     </div>
 

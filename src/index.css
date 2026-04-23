@@ -2462,19 +2462,17 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-.tbr-name-drafted {
-  text-decoration: line-through;
-  color: var(--text-muted);
-  opacity: 0.6;
+.tbr-grade-col {
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .tbr-grade {
-  width: 50px;
-  text-align: right;
   font-weight: 700;
   color: var(--text-muted);
   font-size: 0.85rem;
-  flex-shrink: 0;
 }
 
 .tbr-action {
