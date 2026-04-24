@@ -139,16 +139,24 @@ export default function DraftTracker() {
         .select('*')
         .setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       
+      // Helper: team_a/team_b may have been stored as a full object {abbr,logo,team}
+      // due to a prior bug. Normalize to abbr string before lookup.
+      const toAbbr = (val) => (val && typeof val === 'object' ? val.abbr : val);
+
       let formattedTrades = [];
       if (!tradeError && tradeData) {
-        formattedTrades = tradeData.map(t => ({
-          id: t.id,
-          teamA: ALL_TEAMS.find(at => at.abbr === t.team_a) || { abbr: t.team_a },
-          teamB: ALL_TEAMS.find(at => at.abbr === t.team_b) || { abbr: t.team_b },
-          picksAtoB: t.picks_a_to_b || [],
-          picksBtoA: t.picks_b_to_a || [],
-          note: t.note
-        }));
+        formattedTrades = tradeData.map(t => {
+          const abbrA = toAbbr(t.team_a);
+          const abbrB = toAbbr(t.team_b);
+          return {
+            id: t.id,
+            teamA: ALL_TEAMS.find(at => at.abbr === abbrA) || { abbr: abbrA },
+            teamB: ALL_TEAMS.find(at => at.abbr === abbrB) || { abbr: abbrB },
+            picksAtoB: t.picks_a_to_b || [],
+            picksBtoA: t.picks_b_to_a || [],
+            note: t.note
+          };
+        });
       }
       setTrades(formattedTrades);
     } catch (e) {
