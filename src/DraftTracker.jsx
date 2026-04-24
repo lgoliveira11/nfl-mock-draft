@@ -520,7 +520,10 @@ export default function DraftTracker() {
             </button>
             <button
               className={`tracker-toggle-btn ${view === 'picks' ? 'active' : ''}`}
-              onClick={() => setView('picks')}
+              onClick={() => {
+                setView('picks');
+                setSelectedPicksRound(nextSlot?.round || 1);
+              }}
             >
               <i className="fas fa-stream"></i> Picks ({totalDrafted})
             </button>
