@@ -80,6 +80,7 @@ export default function DraftTracker() {
 
   // Filters (board view)
   const [posFilter, setPosFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'DRAFTED' | 'UNDRAFTED'
   const [search, setSearch] = useState('');
   const [selectedPicksRound, setSelectedPicksRound] = useState(1);
 
@@ -256,8 +257,8 @@ export default function DraftTracker() {
       // ─── Save Trades ───
       const tradeRows = trades.map(t => ({
         id: t.id,
-        team_a: t.teamA,
-        team_b: t.teamB,
+        team_a: t.teamA?.abbr ?? t.teamA,
+        team_b: t.teamB?.abbr ?? t.teamB,
         picks_a_to_b: t.picksAtoB,
         picks_b_to_a: t.picksBtoA,
         note: t.note
@@ -440,10 +441,12 @@ export default function DraftTracker() {
   const filteredBoard = boardData.filter(player => {
     const isDrafted = !!picks[String(player.id)];
 
-    // 1. Position/Status Filter
-    if (posFilter === 'DRAFTED' && !isDrafted) return false;
-    if (posFilter === 'UNDRAFTED' && isDrafted) return false;
-    if (posFilter !== 'ALL' && posFilter !== 'DRAFTED' && posFilter !== 'UNDRAFTED' && player.position !== posFilter) return false;
+    // 1. Position Filter
+    if (posFilter !== 'ALL' && player.position !== posFilter) return false;
+
+    // 2. Status Filter
+    if (statusFilter === 'DRAFTED' && !isDrafted) return false;
+    if (statusFilter === 'UNDRAFTED' && isDrafted) return false;
 
     // 2. Search Filter
     if (search) {
@@ -587,19 +590,30 @@ export default function DraftTracker() {
                 />
               </div>
               <div className="tracker-pos-filters">
-                {['ALL', 'UNDRAFTED', 'DRAFTED', ...ALL_POSITIONS].map(f => (
-                  <button
-                    key={f}
-                    className={`pill-btn ${posFilter === f ? 'active' : ''}`}
-                    onClick={() => setPosFilter(f)}
-                    style={f.length <= 4 && f !== 'ALL' && f !== 'DRAFTED' && f !== 'UNDRAFTED'
-                      ? { color: posColor(f), borderColor: `${posColor(f)}44` }
-                      : {}
-                    }
-                  >
-                    {f}
-                  </button>
-                ))}
+                <div className="filter-group">
+                  {['ALL', 'UNDRAFTED', 'DRAFTED'].map(f => (
+                    <button
+                      key={f}
+                      className={`pill-btn ${statusFilter === f ? 'active' : ''}`}
+                      onClick={() => setStatusFilter(f)}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+                <div className="filter-divider" />
+                <div className="filter-group scrollable-filters">
+                  {['ALL', ...ALL_POSITIONS].map(f => (
+                    <button
+                      key={f}
+                      className={`pill-btn ${posFilter === f ? 'active' : ''}`}
+                      onClick={() => setPosFilter(f)}
+                      style={f !== 'ALL' ? { color: posColor(f), borderColor: `${posColor(f)}44` } : {}}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
