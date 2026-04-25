@@ -2773,14 +2773,37 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(4px);
 }
 
-.tracker-board-row.is-drafted {
+.tracker-board-row.is-available {
   opacity: 0.5;
-  filter: grayscale(0.5);
-  background: rgba(0, 0, 0, 0.15);
-  pointer-events: none; /* Optional: prevent interaction with drafted players if needed, or keep for re-drafting */
+  filter: grayscale(0.4);
 }
-.tracker-board-row.is-drafted:hover {
-  transform: none;
+
+.tracker-board-row.is-available:hover {
+  opacity: 0.9;
+  filter: none;
+}
+
+.tracker-board-row.is-drafted {
+  opacity: 1;
+  filter: none;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.tracker-board-row.current-pick-highlight {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%) !important;
+  border: 1px solid var(--accent-primary) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  animation: otc-pulse 2s infinite ease-in-out;
+  z-index: 5;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+@keyframes otc-pulse {
+  0% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.3); border-color: var(--accent-primary); }
+  100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.4); }
 }
 
 .tbr-rank {
@@ -3296,9 +3319,8 @@ h1, h2, h3, h4, h5, h6 {
   .tbr-team-logo { width: 22px; height: 22px; }
   .tbr-team-abbr { font-size: 0.85rem; }
 
-  /* Simplificação para selecionados no mobile */
-  .is-drafted .tbr-team-abbr,
-  .is-drafted .tbr-pick-num {
+  .is-available .tbr-team-abbr,
+  .is-available .tbr-pick-num {
     display: none;
   }
   
