@@ -3258,25 +3258,46 @@ h1, h2, h3, h4, h5, h6 {
   /* Ajustes para a linha do Board no Mobile */
   .tracker-board-row {
     padding: 0.6rem 0.75rem;
-    gap: 0.4rem;
+    gap: 0.5rem;
   }
-  .tbr-rank { width: 25px; font-size: 0.85rem; }
-  .tbr-pos { display: none; }
-  .tbr-pick-info { width: 35px; justify-content: center; }
-  .tbr-grade-col { width: 35px; }
-  .tbr-action { width: 40px; }
+  .tbr-rank { width: 22px; font-size: 0.85rem; text-align: left; }
   
+  .tbr-pos { 
+    display: flex; 
+    width: 42px; 
+    justify-content: flex-start;
+  }
+
+  .tpr-pos-badge {
+    font-size: 0.6rem !important;
+    padding: 0.1rem 0.25rem !important;
+    min-width: 38px;
+    text-align: center;
+  }
+
   .tbr-name { 
     font-size: 0.85rem; 
     min-width: 50px; 
     gap: 0.3rem;
+    flex: 2; /* Dá mais peso ao nome */
   }
+
+  .trade-badge {
+    display: none !important; /* Elimina o badge de troca no mobile conforme pedido */
+  }
+
+  .tbr-pick-info { 
+    width: 32px; 
+    justify-content: flex-end; 
+  }
+  .tbr-grade-col { width: 32px; }
+  .tbr-action { width: 38px; }
+  
   .tbr-team-logo { width: 22px; height: 22px; }
   .tbr-team-abbr { font-size: 0.85rem; }
 
   /* Simplificação para selecionados no mobile */
   .is-drafted .tbr-team-abbr,
-  .is-drafted .tbr-pos,
   .is-drafted .tbr-pick-num {
     display: none;
   }
@@ -3284,10 +3305,6 @@ h1, h2, h3, h4, h5, h6 {
   /* Garantir alinhamento da grade ocultando o texto 'Disponível' */
   .tbr-undrafted .tbr-available {
     display: none;
-  }
-  .tbr-pick-info {
-    width: 35px; /* Espaço apenas para o logo */
-    justify-content: center;
   }
 }
 
