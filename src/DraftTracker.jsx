@@ -61,7 +61,7 @@ export default function DraftTracker() {
   const [loginError, setLoginError] = useState('');
 
   // View toggle
-  const [view, setView] = useState('board'); // 'board' | 'picks'
+  const [view, setView] = useState('board'); // 'board' | 'picks' | 'teams'
 
   // Board
   const [selectedBoard, setSelectedBoard] = useState('otc');
@@ -83,6 +83,18 @@ export default function DraftTracker() {
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'DRAFTED' | 'UNDRAFTED'
   const [search, setSearch] = useState('');
   const [selectedPicksRound, setSelectedPicksRound] = useState(1);
+
+  // Teams view – persisted in localStorage
+  const [selectedTeam, setSelectedTeam] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dt_selected_team');
+      if (saved) {
+        const found = ALL_TEAMS.find(t => t.abbr === saved);
+        if (found) return found;
+      }
+    } catch (_) {}
+    return ALL_TEAMS[0] || null;
+  });
 
   // Pick Modal
   const [modalPlayer, setModalPlayer] = useState(null);
@@ -527,6 +539,12 @@ export default function DraftTracker() {
             >
               <i className="fas fa-stream"></i> Picks ({totalDrafted})
             </button>
+            <button
+              className={`tracker-toggle-btn ${view === 'teams' ? 'active' : ''}`}
+              onClick={() => setView('teams')}
+            >
+              <i className="fas fa-shield-halved"></i> Times
+            </button>
           </div>
 
           {/* Stats & actions */}
@@ -627,7 +645,7 @@ export default function DraftTracker() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : view === 'picks' ? (
             <div className="round-selector-sticky">
               <div className="round-selector" style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.4rem' }}>
                 {[1, 2, 3, 4, 5, 6, 7].map(round => (
@@ -637,6 +655,26 @@ export default function DraftTracker() {
                     onClick={() => setSelectedPicksRound(round)}
                   >
                     ROUND {round}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Teams filter bar */
+            <div className="round-selector-sticky">
+              <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.4rem', alignItems: 'center' }}>
+                {ALL_TEAMS.map(t => (
+                  <button
+                    key={t.abbr}
+                    className={`team-filter-btn ${selectedTeam?.abbr === t.abbr ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedTeam(t);
+                      try { localStorage.setItem('dt_selected_team', t.abbr); } catch (_) {}
+                    }}
+                    title={t.team}
+                  >
+                    <img src={t.logo} alt={t.abbr} className="team-filter-logo" />
+                    <span className="team-filter-abbr">{t.abbr}</span>
                   </button>
                 ))}
               </div>
@@ -754,7 +792,7 @@ export default function DraftTracker() {
             </div>
           )}
         </div>
-      ) : (
+      ) : view === 'picks' ? (
             /* ── Picks View ── */
             <div className="tracker-board-list-container">
 
@@ -858,7 +896,142 @@ export default function DraftTracker() {
                 })}
             </div>
           </div>
-        )}
+      ) : (
+            /* ── Teams View ── */
+            <div className="tracker-board-list-container">
+            {selectedTeam && (
+              <>
+                <div className="teams-view-header">
+                  <img src={selectedTeam.logo} alt={selectedTeam.abbr} className="teams-view-logo" />
+                  <div className="teams-view-info">
+                    <span className="teams-view-abbr">{selectedTeam.abbr}</span>
+                    <span className="teams-view-name">{selectedTeam.team}</span>
+                  </div>
+                  <div className="teams-view-stats">
+                    <div className="teams-stat-item">
+                      <span className="teams-stat-value">
+                        {Object.values(picks).filter(p => p.teamAbbr === selectedTeam.abbr).length}
+                      </span>
+                      <span className="teams-stat-label">Selecionados</span>
+                    </div>
+                    <div className="teams-stat-item">
+                      <span className="teams-stat-value">
+                        {rawDraftOrder
+                          .map((_, idx) => idx + 1)
+                          .filter(pn => getEffectiveTeam(pn)?.abbr === selectedTeam.abbr && !Object.values(picks).find(p => p.pickNumber === pn))
+                          .length}
+                      </span>
+                      <span className="teams-stat-label">Próximas</span>
+                    </div>
+                    <div className="teams-stat-item">
+                      <span className="teams-stat-value">
+                        {rawDraftOrder
+                          .map((_, idx) => idx + 1)
+                          .filter(pn => getEffectiveTeam(pn)?.abbr === selectedTeam.abbr)
+                          .length}
+                      </span>
+                      <span className="teams-stat-label">Total</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="tracker-board-list">
+                  {rawDraftOrder
+                    .map((slot, idx) => ({ slot, pickNumber: idx + 1 }))
+                    .filter(({ pickNumber }) => getEffectiveTeam(pickNumber)?.abbr === selectedTeam.abbr)
+                    .map(({ slot, pickNumber }) => {
+                      const pickData = Object.values(picks).find(p => p.pickNumber === pickNumber);
+                      const isTradedPick = tradedPickNums.includes(pickNumber);
+                      const isOnTheClock = pickNumber === nextPickNumber && !isDraftComplete;
+
+                      return (
+                        <div
+                          key={pickNumber}
+                          className={`tracker-board-row ${
+                            pickData ? 'is-drafted' : isOnTheClock ? 'current-pick-highlight' : 'is-available'
+                          } ${isTradedPick ? 'is-traded-pick' : ''}`}
+                          style={{ cursor: 'default' }}
+                        >
+                          <div className="tbr-rank" style={{ color: 'var(--text-primary)' }}>#{String(pickNumber).padStart(2, '0')}</div>
+
+                          <div className="tbr-pos">
+                            <span className="teams-round-badge">R{slot.round}</span>
+                          </div>
+
+                          {pickData ? (
+                            <>
+                              <div className="tbr-pos">
+                                <span className="tpr-pos-badge" style={{ background:`${posColor(pickData.position)}18`, color:posColor(pickData.position), borderColor:`${posColor(pickData.position)}44` }}>{pickData.position}</span>
+                              </div>
+                              <div className="tbr-name">
+                                <span>{pickData.playerName}</span>
+                                {isTradedPick && (
+                                  <span
+                                    className="trade-badge clickable"
+                                    style={{ marginLeft: '0.6rem' }}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pickNumber)); }}
+                                    title="Ver detalhes da troca"
+                                  >
+                                    <i className="fas fa-arrows-rotate"></i> via troca
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="tbr-pos" />
+                              <div className="tbr-name" style={{ color: isOnTheClock ? '#93c5fd' : 'var(--text-muted)', fontWeight: isOnTheClock ? 800 : 400 }}>
+                                <span>{isOnTheClock ? 'ON THE CLOCK' : 'PREVISTA'}</span>
+                                {isTradedPick && (
+                                  <span
+                                    className="trade-badge clickable"
+                                    style={{ marginLeft: '0.5rem' }}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedTrade(getTradeForPick(pickNumber)); }}
+                                    title="Ver detalhes da troca"
+                                  >
+                                    <i className="fas fa-arrows-rotate"></i> via troca
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="tbr-action">
+                            {isMaster && (
+                              pickData ? (
+                                <button
+                                  className="tpr-btn tpr-btn-clear"
+                                  onClick={e => {
+                                    const playerId = Object.keys(picks).find(id => picks[id].pickNumber === pickNumber);
+                                    if (playerId) clearPick(playerId, e);
+                                  }}
+                                  title="Remover"
+                                >
+                                  <i className="fas fa-xmark"></i>
+                                </button>
+                              ) : (
+                                <button
+                                  className="tpr-btn tpr-btn-add"
+                                  onClick={() => {
+                                    setModalPickNum(String(pickNumber));
+                                    setView('board');
+                                    setTimeout(() => document.querySelector('.tracker-search-input')?.focus(), 100);
+                                  }}
+                                  title="Registrar pick"
+                                >
+                                  <i className="fas fa-plus"></i>
+                                </button>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </>
+            )}
+          </div>
+      )}
       </div>
 
       {/* ── Login Modal ── */}
