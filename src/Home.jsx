@@ -31,6 +31,19 @@ export default function Home() {
             <button className="home-card-btn">Acessar Tracker</button>
           </div>
 
+          {/* Scout Projetado Card */}
+          <div className="home-card scout-card" onClick={() => navigate('/scout')}>
+            <div className="home-card-icon" style={{ color: '#93c5fd' }}>
+              <i className="fas fa-microscope"></i>
+            </div>
+            <div className="home-card-info">
+              <h2>Scout Projetado</h2>
+              <p>Analise o draft real sob a ótica do Scout. O que aconteceria se os times pegassem o BPA por posição?</p>
+              <div className="home-card-badge" style={{ backgroundColor: 'rgba(147, 197, 253, 0.2)', color: '#93c5fd' }}>ANALYSIS</div>
+            </div>
+            <button className="home-card-btn" style={{ borderColor: 'rgba(147, 197, 253, 0.3)', color: '#93c5fd' }}>Ver Análise</button>
+          </div>
+
           {/* Mock Draft Card */}
           <div className="home-card coming-soon" onClick={() => setShowSoon(true)}>
             <div className="home-card-icon">

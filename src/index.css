@@ -3638,3 +3638,23 @@ h1, h2, h3, h4, h5, h6 {
   .teams-view-stats { width: 100%; justify-content: space-around; }
   .team-filter-logo { width: 24px; height: 24px; }
 }
+
+/* ── Draft Grade Badge ── */
+.tbr-grade-badge-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 45px;
+}
+
+.grade-badge {
+  display: inline-block;
+  text-align: center;
+  min-width: 2.2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+
+.grade-badge:hover {
+  transform: scale(1.1);
+}

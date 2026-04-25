@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import { draftOrder as rawDraftOrder } from './data/mockData';
 import bigBoard from './data/bigboard.json';
 import pffBoard from './data/pff_board.json';
+import { calculateGrade, getGradeColor } from './utils/gradeUtils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MASTER_PASSWORD = 'DraFt#2026!AdmIn_TrAckEr_X9';
@@ -520,6 +521,10 @@ export default function DraftTracker() {
                 {b.label}
               </button>
             ))}
+            <div className="filter-divider" style={{ height: '20px', margin: '0 0.5rem' }} />
+            <a href="/scout" className="pill-btn" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(147, 197, 253, 0.1)', color: '#93c5fd', borderColor: 'rgba(147, 197, 253, 0.3)' }}>
+              <i className="fas fa-microscope"></i> SCOUT
+            </a>
           </div>
 
           {/* View toggle */}
@@ -838,6 +843,49 @@ export default function DraftTracker() {
                               </span>
                             )}
                           </div>
+
+                          {/* Draft Grade Badge */}
+                          {(() => {
+                            // Find player ID for this pick number
+                            const playerId = Object.keys(picks).find(id => picks[id].pickNumber === pickNumber);
+                            if (!playerId) return null;
+
+                            // Find player in active board to get rank and grade
+                            const playerOnBoard = boardData.find(p => String(p.id) === String(playerId));
+                            if (!playerOnBoard || playerOnBoard.isAugmented) return null;
+
+                            // Get team needs for the team that made the pick
+                            const teamData = rawDraftOrder.find(t => t.abbr === effectiveTeam?.abbr);
+                            const teamNeeds = teamData?.needs || [];
+
+                            const gradeResult = calculateGrade(
+                              { pickNumber, round: slot.round, position: pickData.position },
+                              playerOnBoard.rank,
+                              playerOnBoard.grade,
+                              teamNeeds
+                            );
+
+                            if (!gradeResult) return null;
+
+                            return (
+                              <div className="tbr-grade-badge-container" style={{ marginLeft: 'auto', marginRight: '1rem' }}>
+                                <span 
+                                  className="grade-badge" 
+                                  style={{ 
+                                    backgroundColor: getGradeColor(gradeResult.grade),
+                                    color: '#000',
+                                    fontWeight: 'bold',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem'
+                                  }}
+                                  title={`Score: ${gradeResult.score.toFixed(1)} (V:${gradeResult.breakdown.value.toFixed(0)} T:${gradeResult.breakdown.talent.toFixed(0)} N:${gradeResult.breakdown.need.toFixed(0)})`}
+                                >
+                                  {gradeResult.grade}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </>
                       ) : (
                         <>
@@ -976,6 +1024,47 @@ export default function DraftTracker() {
                                   </span>
                                 )}
                               </div>
+
+                              {/* Draft Grade Badge */}
+                              {(() => {
+                                // Find player in active board to get rank and grade
+                                const playerOnBoard = boardData.find(p => String(p.id) === String(Object.keys(picks).find(id => picks[id].pickNumber === pickNumber)));
+                                if (!playerOnBoard || playerOnBoard.isAugmented) return null;
+
+                                // Get original team needs from rawDraftOrder (based on the slot index, not necessarily the current owner)
+                                // But team needs should probably be for the team that actually made the pick.
+                                // The mockData.js has needs in the draftOrder slots.
+                                const teamData = rawDraftOrder.find(t => t.abbr === selectedTeam.abbr);
+                                const teamNeeds = teamData?.needs || [];
+
+                                const gradeResult = calculateGrade(
+                                  { pickNumber, round: slot.round, position: pickData.position },
+                                  playerOnBoard.rank,
+                                  playerOnBoard.grade,
+                                  teamNeeds
+                                );
+
+                                if (!gradeResult) return null;
+
+                                return (
+                                  <div className="tbr-grade-badge-container" style={{ marginLeft: 'auto', marginRight: '1rem' }}>
+                                    <span 
+                                      className="grade-badge" 
+                                      style={{ 
+                                        backgroundColor: getGradeColor(gradeResult.grade),
+                                        color: '#000',
+                                        fontWeight: 'bold',
+                                        padding: '2px 6px',
+                                        borderRadius: '4px',
+                                        fontSize: '0.75rem'
+                                      }}
+                                      title={`Score: ${gradeResult.score.toFixed(1)} (V:${gradeResult.breakdown.value.toFixed(0)} T:${gradeResult.breakdown.talent.toFixed(0)} N:${gradeResult.breakdown.need.toFixed(0)})`}
+                                    >
+                                      {gradeResult.grade}
+                                    </span>
+                                  </div>
+                                );
+                              })()}
                             </>
                           ) : (
                             <>
